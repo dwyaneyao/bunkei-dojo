@@ -1,23 +1,41 @@
 import { LESSONS, PROBLEMS, pointById } from '../content'
 import { buildDaily, errorStats, LEVEL_HINT, LEVELS, mastery, streak } from '../lib/plan'
 import { dayKey, useProgress } from '../lib/store'
+import { useCloud } from '../lib/cloud'
 import { J } from '../lib/markup'
 import { TAG_HINT, TAG_LABEL } from '../types'
 import { daysUntil } from '../lib/util'
+import { CountUp, Icon, Ring } from '../components/ui'
+
+const WEEK = ['日', '一', '二', '三', '四', '五', '六']
+
+function greeting(h: number) {
+  if (h < 5) return 'お疲れさまです'
+  if (h < 11) return 'おはようございます'
+  if (h < 18) return 'こんにちは'
+  return 'こんばんは'
+}
 
 export default function Home() {
   const p = useProgress()
+  const cloud = useCloud()
+  const now = new Date()
   const plan = buildDaily(p)
   const stats = errorStats(p)
   const left = daysUntil(p.settings.examDate)
   const s = streak(p)
-  const total = plan.steps.length
+  const remaining = plan.steps.length
   const todayLog = p.log.filter((a) => dayKey(a.t) === dayKey(Date.now()))
+  const done = todayLog.length
+  const acc = done ? Math.round((todayLog.filter((a) => a.ok).length / done) * 100) : null
+  const allPoints = LESSONS.flatMap((l) => l.points)
+  const solid = allPoints.filter((pt) => mastery(p, pt.id).level >= 3).length
+  const firstName = (cloud.name ?? '').split(/\s+/)[0]
 
   return (
     <div className="home">
       {PROBLEMS.length > 0 && (
-        <div className="card warn">
+        <div className="card warn small">
           <b>内容文件有问题：</b>
           <ul>
             {PROBLEMS.map((x, i) => (
@@ -27,66 +45,123 @@ export default function Home() {
         </div>
       )}
 
-      <section className="today card">
-        <div className="today-main">
-          <h1>今日练习</h1>
-          {total > 0 ? (
-            <p className="today-line">
-              复习 <b>{plan.reviews}</b> 题
-              {plan.newPoints.length > 0 && (
-                <>
-                  {' '}
-                  · 新文型 <b>{plan.newPoints.length}</b> 个
-                </>
-              )}
-              {' '}
-              · 共 <b>{total}</b> 步
-            </p>
-          ) : (
-            <p className="today-line">今天的任务都完成了。</p>
-          )}
-          {plan.newPoints.length > 0 && (
-            <div className="safe">
-              {plan.newPoints.map((id) => (
-                <span key={id} className="safe-chip">
-                  <J>{pointById.get(id)!.pattern}</J>
-                </span>
-              ))}
-            </div>
-          )}
-          <div className="actions">
-            {total > 0 ? (
-              <a className="btn primary big" href="#/session">
-                开始
-              </a>
-            ) : (
-              <a className="btn primary big" href="#/exam">
-                做一次模拟考
-              </a>
-            )}
+      <header className="greet">
+        <div>
+          <div className="greet-date">
+            {now.getMonth() + 1}月{now.getDate()}日 · 星期{WEEK[now.getDay()]}
           </div>
+          <h1 lang="ja">
+            {greeting(now.getHours())}
+            {firstName && `、${firstName}`}
+          </h1>
         </div>
-        <div className="today-side">
-          <div className="stat" title={todayLog.length ? `其中对了 ${todayLog.filter((a) => a.ok).length} 题` : ''}>
-            <span className="stat-n">{todayLog.length}</span>
-            <span className="stat-l">今天做了（题）</span>
-          </div>
-          <div className="stat">
-            <span className="stat-n">{s}</span>
-            <span className="stat-l">连续天数</span>
-          </div>
-          {left !== null && left >= 0 ? (
-            <div className="stat">
-              <span className="stat-n">{left}</span>
-              <span className="stat-l">距考试（天）</span>
-            </div>
+      </header>
+
+      <section className="hero">
+        <div className="hero-main">
+          <div className="eyebrow">今日の稽古</div>
+          {remaining > 0 ? (
+            <>
+              <h2>{done > 0 ? '继续今天的练习' : '开始今天的练习'}</h2>
+              <p className="hero-line">
+                复习 <b>{plan.reviews}</b> 题
+                {plan.newPoints.length > 0 && (
+                  <>
+                    {' '}
+                    · 新文型 <b>{plan.newPoints.length}</b> 个
+                  </>
+                )}{' '}
+                · 共 <b>{remaining}</b> 步
+              </p>
+              {plan.newPoints.length > 0 && (
+                <div className="chips">
+                  {plan.newPoints.map((id) => (
+                    <span key={id} className="chip">
+                      <J furigana={false}>{pointById.get(id)!.pattern}</J>
+                    </span>
+                  ))}
+                </div>
+              )}
+              <div className="actions">
+                <a className="btn light big" href="#/session">
+                  <Icon name="play" size={16} />
+                  {done > 0 ? '继续' : '开始'}
+                </a>
+              </div>
+            </>
           ) : (
-            <a className="stat link" href="#/settings">
+            <>
+              <h2>今天的练习完成了</h2>
+              <p className="hero-line">复习都做完了，新文型也到了今天的上限。想再练，可以做一次模拟考。</p>
+              <div className="actions">
+                <a className="btn light big" href="#/exam">
+                  <Icon name="exam" size={18} />
+                  做模拟考
+                </a>
+              </div>
+            </>
+          )}
+        </div>
+        <Ring value={done + remaining ? done / (done + remaining) : 1} size={132} stroke={11} tone="light">
+          <div>
+            <div className="ring-num">
+              <CountUp to={done} />
+            </div>
+            <div className="ring-label">今天已做</div>
+          </div>
+        </Ring>
+      </section>
+
+      <section className="stats stagger">
+        <div className="stat">
+          <span className="stat-ico kin">
+            <Icon name="flame" />
+          </span>
+          <span className="stat-n">
+            <CountUp to={s} />
+            <small>天</small>
+          </span>
+          <span className="stat-l">连续练习</span>
+        </div>
+        <div className="stat">
+          <span className="stat-ico ok">
+            <Icon name="target" />
+          </span>
+          <span className="stat-n">
+            {acc === null ? '—' : <CountUp to={acc} />}
+            {acc !== null && <small>%</small>}
+          </span>
+          <span className="stat-l">今天的正确率</span>
+        </div>
+        <a className="stat" href="#/points">
+          <span className="stat-ico ai">
+            <Icon name="layers" />
+          </span>
+          <span className="stat-n">
+            <CountUp to={solid} />
+            <small>/ {allPoints.length}</small>
+          </span>
+          <span className="stat-l">隔天还会的文型</span>
+        </a>
+        <a className="stat" href="#/me">
+          <span className="stat-ico shu">
+            <Icon name="calendar" />
+          </span>
+          {left !== null && left >= 0 ? (
+            <>
+              <span className="stat-n">
+                <CountUp to={left} />
+                <small>天</small>
+              </span>
+              <span className="stat-l">距考试</span>
+            </>
+          ) : (
+            <>
               <span className="stat-n">＋</span>
               <span className="stat-l">设置考试日期</span>
-            </a>
+            </>
           )}
-        </div>
+        </a>
       </section>
 
       {LESSONS.map((l) => {
@@ -94,16 +169,19 @@ export default function Home() {
         const counts = [0, 1, 2, 3, 4].map((n) => levels.filter((m) => m.level === n).length)
         return (
           <section key={l.id} className="card">
-            <div className="row between">
-              <h2>{l.title}</h2>
+            <div className="card-head">
+              <h2 className="card-title">
+                <Icon name="layers" />
+                {l.title}・文型地图
+              </h2>
               <span className="muted small">
                 {counts.map((c, n) => (c ? `${LEVELS[n]} ${c}` : '')).filter(Boolean).join(' · ')}
               </span>
             </div>
             {l.groups.map((g) => (
-              <div key={g.id} className="map-row">
-                <span className="map-group">{g.title}</span>
-                <div className="map-points">
+              <div key={g.id} className="map-group">
+                <span className="map-label">{g.title}</span>
+                <div className="map-tiles">
                   {l.points
                     .filter((pt) => pt.group === g.id)
                     .map((pt) => {
@@ -112,7 +190,7 @@ export default function Home() {
                         <a
                           key={pt.id}
                           href={`#/point/${pt.id}`}
-                          className={`mp lv${m.level}` + (m.lastFail ? ' fail' : '')}
+                          className={`tile lv${m.level}` + (m.lastFail ? ' fail' : '')}
                           title={`${LEVELS[m.level]}：${LEVEL_HINT[m.level]}${m.lastFail ? '（最近一次错）' : ''}`}
                         >
                           <J furigana={false}>{pt.pattern}</J>
@@ -124,13 +202,13 @@ export default function Home() {
             ))}
             <div className="legend">
               {LEVELS.map((name, n) => (
-                <span key={n} className="legend-item" title={LEVEL_HINT[n]}>
+                <span key={n} title={LEVEL_HINT[n]}>
                   <i className={`dot lv${n}`} />
                   {name}
                 </span>
               ))}
-              <span className="legend-item" title="最近一次作答是错的">
-                <i className="dot fail" />
+              <span>
+                <i className="dot lv0 fail" />
                 最近错过
               </span>
             </div>
@@ -138,35 +216,50 @@ export default function Home() {
         )
       })}
 
-      <section className="card">
-        <h2>最近 30 天的错因</h2>
-        {stats.byTag.length === 0 ? (
-          <p className="muted">还没有错题记录。做题时选择「哪里不对」，这里会统计你最常出问题的环节。</p>
-        ) : (
-          <div className="err-grid">
-            <div>
+      <section className="two-col">
+        <div className="card">
+          <div className="card-head">
+            <h2 className="card-title">
+              <Icon name="chart" />
+              最近 30 天的错因
+            </h2>
+          </div>
+          {stats.byTag.length === 0 ? (
+            <p className="empty small">还没有错题记录。做完成句时选「哪里不对」，这里会统计你最常出问题的环节。</p>
+          ) : (
+            <div className="bars">
               {stats.byTag.map(([t, n]) => (
-                <div key={t} className="err-row" title={TAG_HINT[t]}>
-                  <span className="err-name">{TAG_LABEL[t]}</span>
-                  <span className="err-bar">
+                <div key={t} className="bar-row" title={TAG_HINT[t]}>
+                  <span>{TAG_LABEL[t]}</span>
+                  <span className="bar">
                     <i style={{ width: `${(n / stats.byTag[0][1]) * 100}%` }} />
                   </span>
-                  <span className="err-n">{n}</span>
+                  <span className="bar-n">{n}</span>
                 </div>
               ))}
             </div>
-            <div>
-              <p className="muted small">错得最多的文型</p>
-              <div className="safe">
-                {stats.byPoint.slice(0, 8).map(([id, n]) => (
-                  <a key={id} className="safe-chip" href={`#/point/${id}`}>
-                    <J>{pointById.get(id)!.pattern}</J> <span className="muted">×{n}</span>
-                  </a>
-                ))}
-              </div>
-            </div>
+          )}
+        </div>
+        <div className="card">
+          <div className="card-head">
+            <h2 className="card-title">
+              <Icon name="target" />
+              需要多练的文型
+            </h2>
           </div>
-        )}
+          {stats.byPoint.length === 0 ? (
+            <p className="empty small">还没有。错过的文型会出现在这里。</p>
+          ) : (
+            <div className="chips">
+              {stats.byPoint.slice(0, 8).map(([id, n]) => (
+                <a key={id} className="chip" href={`#/point/${id}`}>
+                  <J furigana={false}>{pointById.get(id)!.pattern}</J>
+                  <span className="muted">×{n}</span>
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
       </section>
     </div>
   )

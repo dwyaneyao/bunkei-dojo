@@ -32,6 +32,7 @@ export interface Settings {
   newPerDay: number
   furigana: boolean
   retention: number
+  theme: 'auto' | 'light' | 'dark'
 }
 
 export interface Progress {
@@ -48,7 +49,7 @@ export interface Progress {
 const fresh = (): Progress => ({
   version: 1,
   created: Date.now(),
-  settings: { examDate: '', newPerDay: 4, furigana: true, retention: 0.9 },
+  settings: { examDate: '', newPerDay: 4, furigana: true, retention: 0.9, theme: 'auto' },
   cards: {},
   intro: {},
   log: [],

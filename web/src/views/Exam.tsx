@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react'
 import { LESSONS, itemById, itemsOf, pointById } from '../content'
 import { buildExam } from '../lib/plan'
 import { record, useProgress } from '../lib/store'
+import { useFocusMode } from '../lib/focus'
 import { compose } from '../lib/answer'
 import type { Grade } from '../lib/fsrs'
 import type { ProduceItem } from '../types'
 import { J } from '../lib/markup'
 import Blanks from '../components/Blanks'
 import { Reveal } from '../components/Steps'
+import { CountUp, Icon, Ring, Stepper, Switch } from '../components/ui'
 
 type Phase = 'setup' | 'paper' | 'check' | 'done'
 
@@ -56,6 +58,7 @@ export default function Exam() {
   const [start, setStart] = useState(draft?.start ?? 0)
   const [took, setTook] = useState(draft?.took ?? 0)
   const [now, setNow] = useState(Date.now())
+  useFocusMode(phase === 'paper' || phase === 'check')
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -76,58 +79,82 @@ export default function Exam() {
     return () => clearInterval(t)
   }, [phase])
 
+  const n = Math.min(count, max)
+
   if (phase === 'setup')
     return (
-      <div className="card exam-setup">
-        <h1>模拟考</h1>
-        <p className="muted">
-          和考试一样：一整张卷子先全部写完，再一题一题对答案、自评。每个文型出一道没怎么做过的完成句，弱的文型优先。
-        </p>
-        <div className="field">
-          <span className="field-l">范围</span>
-          <div className="row wrap">
-            {LESSONS.map((l) => (
-              <label key={l.id} className="check">
-                <input
-                  type="checkbox"
-                  checked={lessons.includes(l.id)}
-                  onChange={(e) => setLessons(e.target.checked ? [...lessons, l.id] : lessons.filter((x) => x !== l.id))}
-                />
-                {l.title}
-              </label>
-            ))}
+      <div>
+        <header className="page-head">
+          <div className="eyebrow">模擬試験</div>
+          <h1 className="page-title">模拟考</h1>
+          <p className="page-sub">和考试一样：一整张卷子先全部写完，再一题一题对答案、自评。每个文型出一道你最近没怎么做过的完成句，弱的文型优先。</p>
+        </header>
+
+        <section className="card">
+          <div className="exam-hero">
+            <div>
+              <div className="card-title">
+                <Icon name="exam" />
+                这次考 {n} 题
+              </div>
+              <p className="muted small" style={{ marginTop: 6 }}>
+                题型：<span lang="ja">＿＿に書いて文を完成させてください。</span>
+              </p>
+            </div>
+            <button
+              className="btn primary big"
+              disabled={max === 0}
+              onClick={() => {
+                setItems(buildExam(p, pointsIn, { lessons, count: n, onlyStudied }))
+                setAnswers({})
+                setGrades({})
+                setStart(Date.now())
+                setPhase('paper')
+              }}
+            >
+              <Icon name="play" size={16} />
+              开始答题
+            </button>
           </div>
-        </div>
-        <div className="field">
-          <span className="field-l">题数</span>
-          <input
-            type="number"
-            min={1}
-            max={max}
-            value={Math.min(count, max)}
-            onChange={(e) => setCount(Math.max(1, Number(e.target.value) || 1))}
-          />
-          <span className="muted small">最多 {max} 题（每个文型一题）</span>
-        </div>
-        <label className="check">
-          <input type="checkbox" checked={onlyStudied} onChange={(e) => setOnlyStudied(e.target.checked)} />
-          只考已经学过的文型（{studied} 个）
-        </label>
-        <div className="actions">
-          <button
-            className="btn primary big"
-            disabled={max === 0}
-            onClick={() => {
-              setItems(buildExam(p, pointsIn, { lessons, count: Math.min(count, max), onlyStudied }))
-              setAnswers({})
-              setGrades({})
-              setStart(Date.now())
-              setPhase('paper')
-            }}
-          >
-            开始答题
-          </button>
-        </div>
+
+          <div className="option-rows">
+            <div className="opt-row">
+              <div className="opt-row-l">
+                <b>范围</b>
+                <span>选要考的课</span>
+              </div>
+              <div className="chips">
+                {LESSONS.map((l) => {
+                  const on = lessons.includes(l.id)
+                  return (
+                    <button
+                      key={l.id}
+                      className={'tag-btn' + (on ? ' on' : '')}
+                      style={on ? { background: 'var(--ai)', borderColor: 'var(--ai)' } : undefined}
+                      onClick={() => setLessons(on ? lessons.filter((x) => x !== l.id) : [...lessons, l.id])}
+                    >
+                      {l.title}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+            <div className="opt-row">
+              <div className="opt-row-l">
+                <b>题数</b>
+                <span>每个文型一题，最多 {max} 题</span>
+              </div>
+              <Stepper value={n} min={1} max={Math.max(1, max)} onChange={setCount} />
+            </div>
+            <div className="opt-row">
+              <div className="opt-row-l">
+                <b>只考学过的文型</b>
+                <span>已经学过 {studied} 个</span>
+              </div>
+              <Switch checked={onlyStudied} onChange={setOnlyStudied} label="只考学过的文型" />
+            </div>
+          </div>
+        </section>
       </div>
     )
 
@@ -135,40 +162,57 @@ export default function Exam() {
 
   if (phase === 'paper')
     return (
-      <div className="paper">
-        <div className="paper-head">
-          <div>
-            <h1 lang="ja">模擬試験</h1>
-            <p className="ja muted">＿＿に書いて文を完成させてください。</p>
-          </div>
-          <div className="timer">{fmt(now - start)}</div>
-        </div>
-        <ol className="paper-list">
-          {list.map((it, n) => (
-            <li key={it.id}>
-              <span className="paper-no">{n + 1}</span>
-              <Blanks prompt={it.prompt} values={answers[it.id] ?? []} onChange={(v) => setAnswers({ ...answers, [it.id]: v })} />
-            </li>
-          ))}
-        </ol>
-        <div className="actions">
+      <div>
+        <div className="exam-bar">
           <button
-            className="btn primary big"
-            onClick={() => {
-              setTook(Date.now() - start)
-              setPhase('check')
-            }}
-          >
-            交卷，开始对答案
-          </button>
-          <button
-            className="btn ghost"
+            className="icon-btn"
+            aria-label="放弃这次模拟考"
             onClick={() => {
               if (confirm('放弃这次模拟考？写的答案不会保存。')) setPhase('setup')
             }}
           >
-            放弃
+            <Icon name="x" />
           </button>
+          <span className="grow">
+            {Object.values(answers).filter((a) => a.some((x) => x?.trim())).length} / {list.length} 已作答
+          </span>
+          <span className="timer">
+            <Icon name="clock" size={16} />
+            {fmt(now - start)}
+          </span>
+        </div>
+        <div className="paper">
+          <div className="paper-head">
+            <div>
+              <h1 lang="ja">模擬試験</h1>
+              <p className="muted small" lang="ja">
+                ＿＿に書いて文を完成させてください。
+              </p>
+            </div>
+            <span className="muted small">共 {list.length} 题</span>
+          </div>
+          <ol className="paper-list">
+            {list.map((it, k) => (
+              <li key={it.id} style={{ animationDelay: `${Math.min(k, 8) * 0.04}s` }}>
+                <span className="paper-no">{k + 1}</span>
+                <div className="paper-item">
+                  <Blanks prompt={it.prompt} values={answers[it.id] ?? []} onChange={(v) => setAnswers({ ...answers, [it.id]: v })} />
+                </div>
+              </li>
+            ))}
+          </ol>
+          <div className="actions" style={{ justifyContent: 'center', marginTop: 26 }}>
+            <button
+              className="btn shu big"
+              onClick={() => {
+                setTook(Date.now() - start)
+                setPhase('check')
+              }}
+            >
+              <Icon name="check" size={18} />
+              交卷，开始对答案
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -177,25 +221,27 @@ export default function Exam() {
 
   if (phase === 'check')
     return (
-      <div className="paper">
-        <div className="paper-head">
-          <div>
-            <h1>对答案</h1>
-            <p className="muted">
-              用时 {fmt(took)} · 已自评 {gradedCount} / {list.length}
-            </p>
-          </div>
+      <div>
+        <div className="exam-bar">
+          <span className="grow">
+            对答案 · 已自评 {gradedCount} / {list.length}
+          </span>
+          <span className="timer">
+            <Icon name="clock" size={16} />
+            {fmt(took)}
+          </span>
+          <button className="btn primary" disabled={gradedCount < list.length} onClick={() => setPhase('done')}>
+            看结果
+          </button>
         </div>
         <ol className="paper-list">
-          {list.map((it, n) => (
+          {list.map((it, k) => (
             <li key={it.id} className={grades[it.id] ? 'graded' : ''}>
-              <span className="paper-no">{n + 1}</span>
-              <div className="grow">
-                <div className="point-line">
-                  <span className="point-tag">
-                    <J>{pointById.get(it.point)!.pattern}</J>
-                  </span>
-                </div>
+              <span className="paper-no">{k + 1}</span>
+              <div className="paper-item card" style={{ padding: 20 }}>
+                <span className="point-tag">
+                  <J furigana={false}>{pointById.get(it.point)!.pattern}</J>
+                </span>
                 <Reveal
                   item={it}
                   fills={answers[it.id] ?? []}
@@ -220,7 +266,7 @@ export default function Exam() {
             </li>
           ))}
         </ol>
-        <div className="actions">
+        <div className="actions" style={{ justifyContent: 'center' }}>
           <button className="btn primary big" disabled={gradedCount < list.length} onClick={() => setPhase('done')}>
             {gradedCount < list.length ? `还有 ${list.length - gradedCount} 题没自评` : '看结果'}
           </button>
@@ -231,28 +277,37 @@ export default function Exam() {
   const score = list.filter((it) => grades[it.id] >= 3).length
   const weak = list.filter((it) => grades[it.id] < 3)
   return (
-    <div className="card center">
-      <h1>结果</h1>
-      <p className="big-stat">
-        <span className="ok">{score}</span> / {list.length}
-      </p>
-      <p className="muted">
-        用时 {fmt(took)}。「对」和「很轻松」算对。没写对的文型：学过的会在今天或明天的复习里再考（有别的句子就换一句），还没学的会排到新文型的最前面。
+    <div className="card result">
+      <div className="eyebrow">結果</div>
+      <Ring value={list.length ? score / list.length : 0} size={170} stroke={13} tone={score / list.length >= 0.8 ? 'ok' : 'ai'}>
+        <div>
+          <div className="result-score">
+            <CountUp to={score} />
+            <span className="muted" style={{ fontSize: '1.2rem' }}>
+              {' '}
+              / {list.length}
+            </span>
+          </div>
+          <div className="muted small">用时 {fmt(took)}</div>
+        </div>
+      </Ring>
+      <p className="muted" style={{ maxWidth: '52ch', margin: '0 auto' }}>
+        「对」和「很轻松」算对。没写对的文型：学过的会在今天或明天的复习里再考（有别的句子就换一句），还没学的会排到新文型的最前面。
       </p>
       {weak.length > 0 && (
-        <div className="safe center">
+        <div className="chips" style={{ justifyContent: 'center', marginTop: 18 }}>
           {weak.map((it) => (
-            <a key={it.id} className="safe-chip" href={`#/point/${it.point}`}>
-              <J>{pointById.get(it.point)!.pattern}</J>
+            <a key={it.id} className="chip" href={`#/point/${it.point}`}>
+              <J furigana={false}>{pointById.get(it.point)!.pattern}</J>
             </a>
           ))}
         </div>
       )}
-      <div className="actions center">
-        <a className="btn primary" href="#/">
+      <div className="actions" style={{ justifyContent: 'center', marginTop: 26 }}>
+        <a className="btn primary big" href="#/">
           回到今日
         </a>
-        <button className="btn" onClick={() => setPhase('setup')}>
+        <button className="btn big" onClick={() => setPhase('setup')}>
           再考一次
         </button>
       </div>

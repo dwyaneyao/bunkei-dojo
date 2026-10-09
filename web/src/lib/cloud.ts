@@ -20,13 +20,15 @@ export interface CloudState {
   /** Auth state known (first answer from Firebase arrived). */
   checked: boolean
   email: string | null
+  name: string | null
+  photo: string | null
   busy: boolean
   /** Epoch ms of the last successful sync. */
   last: number
   error: string
 }
 
-let cloud: CloudState = { checked: !CLOUD_CONFIGURED, email: null, busy: false, last: 0, error: '' }
+let cloud: CloudState = { checked: !CLOUD_CONFIGURED, email: null, name: null, photo: null, busy: false, last: 0, error: '' }
 const listeners = new Set<() => void>()
 const set = (patch: Partial<CloudState>) => {
   cloud = { ...cloud, ...patch }
@@ -177,7 +179,14 @@ export async function startCloud() {
     unwatch?.()
     unwatch = null
     uid = user?.uid ?? null
-    set({ checked: true, email: user?.email ?? null, error: '', last: 0 })
+    set({
+      checked: true,
+      email: user?.email ?? null,
+      name: user?.displayName ?? null,
+      photo: user?.photoURL ?? null,
+      error: '',
+      last: 0,
+    })
     if (!user) return
     void syncNow()
     // Another device wrote: merge it in right away (our own writes come back too and merge as a no-op).

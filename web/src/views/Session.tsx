@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react'
 import { itemById, itemsOf, pointById } from '../content'
 import { buildDaily, buildDrill, type Step } from '../lib/plan'
 import { dayKey, getProgress, markIntro, useProgress, type Mode } from '../lib/store'
+import { useFocusMode } from '../lib/focus'
 import { J } from '../lib/markup'
 import PointCard from '../components/PointCard'
 import { ChoiceStep, FormStep, ProduceStep, type StepResult } from '../components/Steps'
+import { CountUp, Icon, Stamp } from '../components/ui'
 
 interface Tally {
   ok: number
@@ -20,60 +22,85 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
   const [tally, setTally] = useState<Tally>({ ok: 0, bad: 0, missed: [] })
   const [retried] = useState(() => new Set<string>())
 
+  const step = steps[i]
+  const total = steps.length
+  useFocusMode(!!step)
+
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [i])
 
-  const step = steps[i]
-  const total = steps.length
+  const exitHref = mode === 'drill' && point ? `#/point/${point}` : '#/'
 
   if (total === 0)
     return (
-      <div className="card center">
-        <h2>今天没有要做的了</h2>
-        <p className="muted">复习都做完了，新文型也已经达到每日上限。可以去做一次模拟考，或者到「文型表」专练某个文型。</p>
-        <div className="actions center">
-          <a className="btn primary" href="#/exam">
+      <div className="card finish">
+        <Stamp kind="ok" size={84} />
+        <h1>今天没有要做的了</h1>
+        <p className="muted">复习都做完了，新文型也到了每天的上限。可以做一次模拟考，或者到「文型」里专练某一个。</p>
+        <div className="actions" style={{ justifyContent: 'center' }}>
+          <a className="btn primary big" href="#/exam">
             做模拟考
           </a>
-          <a className="btn" href="#/points">
-            文型表
+          <a className="btn big" href="#/points">
+            文型
           </a>
         </div>
       </div>
     )
 
-  if (!step)
+  if (!step) {
+    const n = tally.ok + tally.bad
     return (
-      <div className="card center">
-        <h2>这一轮完成了</h2>
-        <p className="big-stat">
-          <span className="ok">{tally.ok}</span> 对 · <span className="bad">{tally.bad}</span> 错
-        </p>
+      <div className="card finish">
+        <Stamp kind={tally.bad === 0 ? 'ok' : 'tri'} size={92} />
+        <h1 lang="ja">お疲れさまでした</h1>
+        <p className="muted">这一轮完成了</p>
+        <div className="finish-stats">
+          <div>
+            <b className="ok">
+              <CountUp to={tally.ok} />
+            </b>
+            <span className="muted small">对</span>
+          </div>
+          <div>
+            <b className="bad">
+              <CountUp to={tally.bad} />
+            </b>
+            <span className="muted small">错</span>
+          </div>
+          <div>
+            <b>
+              <CountUp to={n ? Math.round((tally.ok / n) * 100) : 0} />%
+            </b>
+            <span className="muted small">正确率</span>
+          </div>
+        </div>
         {tally.missed.length > 0 && (
-          <div className="missed">
-            <p className="muted">错过的文型（已自动安排更早复习）：</p>
-            <div className="safe">
+          <>
+            <p className="muted small">错过的文型，已经安排更早复习：</p>
+            <div className="chips" style={{ justifyContent: 'center', marginTop: 10 }}>
               {[...new Set(tally.missed)].map((id) => (
-                <a key={id} className="safe-chip" href={`#/point/${id}`}>
-                  <J>{pointById.get(id)?.pattern ?? id}</J>
+                <a key={id} className="chip" href={`#/point/${id}`}>
+                  <J furigana={false}>{pointById.get(id)?.pattern ?? id}</J>
                 </a>
               ))}
             </div>
-          </div>
+          </>
         )}
-        <div className="actions center">
-          <a className="btn primary" href="#/">
+        <div className="actions" style={{ justifyContent: 'center', marginTop: 26 }}>
+          <a className="btn primary big" href="#/">
             回到今日
           </a>
           {mode === 'drill' && point && (
-            <a className="btn" href={`#/point/${point}`}>
+            <a className="btn big" href={`#/point/${point}`}>
               回到文型卡
             </a>
           )}
         </div>
       </div>
     )
+  }
 
   const done = (r: StepResult, itemId: string) => {
     const it = itemById.get(itemId)!
@@ -108,18 +135,22 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
   if (step.kind === 'learn') {
     const pt = pointById.get(step.point)!
     body = (
-      <div className="step">
-        <div className="step-kind">新文型</div>
+      <div className="step" key={i}>
+        <div className="step-kind" style={{ marginBottom: 14 }}>
+          <Icon name="sparkle" size={16} />
+          新文型
+        </div>
         <PointCard point={pt} />
-        <div className="actions">
+        <div className="sticky-cta">
           <button
-            className="btn primary"
+            className="btn primary big"
             onClick={() => {
               markIntro(pt.id)
               setI(i + 1)
             }}
           >
             看完了，开始练
+            <Icon name="arrow" size={18} />
           </button>
         </div>
       </div>
@@ -128,7 +159,7 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
     const it = itemById.get(step.item)
     if (!it)
       body = (
-        <div className="step">
+        <div className="step step-card" key={i}>
           <p className="muted">题目 {step.item} 不存在（内容可能改过）。</p>
           <button className="btn" onClick={() => setI(i + 1)}>
             跳过
@@ -142,9 +173,14 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
 
   return (
     <div className="session">
-      <div className="progress">
-        <div className="bar" style={{ width: `${(i / total) * 100}%` }} />
-        <span className="count">
+      <div className="focus-bar">
+        <a className="icon-btn" href={exitHref} aria-label="结束练习" title="结束练习（已做的都保存了）">
+          <Icon name="x" />
+        </a>
+        <div className="progress" aria-label={`进度 ${i + 1} / ${total}`}>
+          <i style={{ width: `${(i / total) * 100}%` }} />
+        </div>
+        <span className="progress-n">
           {i + 1} / {total}
         </span>
       </div>

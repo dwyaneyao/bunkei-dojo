@@ -1,66 +1,80 @@
-import { itemsOf, pointById } from '../content'
+import { itemsOf, lessonOfPoint, pointById } from '../content'
 import { LEVEL_HINT, LEVELS, mastery } from '../lib/plan'
 import { useProgress } from '../lib/store'
 import { formatInterval } from '../lib/fsrs'
 import { J } from '../lib/markup'
 import PointCard from '../components/PointCard'
+import { Icon } from '../components/ui'
 
 const KIND = { form: '接续', choice: '辨析', produce: '完成句' } as const
 
 export default function PointView({ id }: { id: string }) {
   const p = useProgress()
   const pt = pointById.get(id)
-  if (!pt) return <p className="muted">找不到这个文型。</p>
+  if (!pt) return <p className="empty">找不到这个文型。</p>
   const m = mastery(p, id)
   const items = itemsOf(id)
   const now = Date.now()
+  const lesson = lessonOfPoint.get(id)
 
   return (
     <div className="point-view">
-      <div className="row between">
-        <a href="#/points" className="muted">
-          ← 文型表
-        </a>
-        <a className="btn primary" href={`#/session/drill/${id}`}>
-          专练这个文型（{items.length} 题）
-        </a>
-      </div>
-      <PointCard point={pt} />
-      <section className="card">
-        <div className="row between">
-          <h3>
-            掌握程度：<span className={`lv-text lv${m.level}`}>{LEVELS[m.level]}</span>
-          </h3>
-          <span className="muted small">{LEVEL_HINT[m.level]}</span>
-        </div>
-        <table className="items">
-          <thead>
-            <tr>
-              <th>题型</th>
-              <th>题目</th>
-              <th>最近</th>
-              <th>下次复习</th>
-            </tr>
-          </thead>
-          <tbody>
+      <a href="#/points" className="back">
+        <Icon name="left" size={18} />
+        文型
+      </a>
+
+      <div className="stagger">
+        <PointCard
+          point={pt}
+          aside={
+            <div className="pv-cta">
+              <div>
+                <div className="level-pill">
+                  <i className={`dot lv${m.level}` + (m.lastFail ? ' fail' : '')} />
+                  {LEVELS[m.level]}
+                </div>
+                <p className="muted small" style={{ marginTop: 2 }}>
+                  {LEVEL_HINT[m.level]}
+                </p>
+              </div>
+              <a className="btn primary" href={`#/session/drill/${id}`}>
+                <Icon name="pen" size={18} />
+                专练这个文型
+              </a>
+            </div>
+          }
+        />
+
+        <section className="card">
+          <div className="card-head">
+            <h2 className="card-title">
+              <Icon name="exam" />
+              {items.length} 道练习
+            </h2>
+            <span className="muted small">{lesson?.title}</span>
+          </div>
+          <ul className="item-list">
             {items.map((it) => {
               const card = p.cards[it.id]
               const last = [...p.log].reverse().find((a) => a.item === it.id)
               const text = it.type === 'form' ? it.cue : it.prompt
               return (
-                <tr key={it.id}>
-                  <td className="nowrap">{KIND[it.type]}</td>
-                  <td className="ja">
-                    <J>{text}</J>
-                  </td>
-                  <td className="nowrap">{last ? (last.ok ? <span className="ok">✓</span> : <span className="bad">✗</span>) : <span className="muted">—</span>}</td>
-                  <td className="nowrap muted">{card ? (card.due <= now ? '现在' : formatInterval(card.due - now) + '后') : '未做'}</td>
-                </tr>
+                <li key={it.id}>
+                  <span className="item-kind">{KIND[it.type]}</span>
+                  <span className="item-text">
+                    <J furigana={false}>{text}</J>
+                  </span>
+                  <span className="item-state">
+                    {last && (last.ok ? <Icon name="check" size={16} className="ok" /> : <Icon name="x" size={16} className="bad" />)}
+                    {card ? (card.due <= now ? '该复习了' : formatInterval(card.due - now) + '后') : '未做'}
+                  </span>
+                </li>
               )
             })}
-          </tbody>
-        </table>
-      </section>
+          </ul>
+        </section>
+      </div>
     </div>
   )
 }
