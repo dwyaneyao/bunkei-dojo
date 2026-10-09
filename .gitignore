@@ -1,0 +1,9 @@
+# Personal data: learning records and original photos stay on the PC only.
+userdata/
+userdata-sandbox/
+sources/
+
+# Build output and dependencies
+web/node_modules/
+web/dist/
+*.tsbuildinfo
