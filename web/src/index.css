@@ -1296,6 +1296,13 @@ a.stat:hover {
   .hero::after {
     display: none;
   }
+  .hero .eyebrow,
+  .hero h2 {
+    padding-right: 86px;
+  }
+  .hero h2 {
+    font-size: 1.55rem;
+  }
   .hero .ring {
     position: absolute;
     top: 18px;
