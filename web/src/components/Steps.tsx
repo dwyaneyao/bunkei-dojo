@@ -254,7 +254,7 @@ export function ChoiceStep({ item, mode, onDone }: { item: ChoiceItem; mode: Mod
     <div className="step">
       <div className="step-card">
         <Kind icon="eye" label="辨析" point={item.point} />
-        <p className="step-ask">选出填入空格最恰当的一项</p>
+        <p className="step-ask">{item.ask ?? '选出填入空格最恰当的一项'}</p>
         <Sentence text={item.prompt} />
         <ol className="options">
           {opts.map((o, n) => {

@@ -69,6 +69,8 @@ export interface ChoiceOption {
 export interface ChoiceItem extends ItemBase {
   type: 'choice'
   prompt: string
+  /** Instruction shown above the prompt when the default ("pick the best fill") does not fit. */
+  ask?: string
   options: ChoiceOption[]
 }
 
