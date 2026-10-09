@@ -100,7 +100,9 @@ function message(e: unknown): string {
     'auth/network-request-failed': '连不上网络',
     'auth/too-many-requests': '尝试次数太多，请稍后再试',
     'auth/unauthorized-domain': 'Firebase 里还没添加这个网址（已获授权的网域）',
-    'auth/operation-not-allowed': 'Firebase 里还没启用「电子邮件/密码」登录',
+    'auth/operation-not-allowed': 'Firebase 里还没启用这种登录方式',
+    'auth/popup-blocked': '浏览器拦住了登录窗口，请允许弹出窗口后再点一次',
+    'auth/account-exists-with-different-credential': '这个邮箱已经用密码注册过了，请用邮箱和密码登录',
     'permission-denied': '数据库规则还没设置好',
     unavailable: '连不上网络，联网后会自动补上',
   }
@@ -210,6 +212,18 @@ export async function signIn(email: string, password: string) {
   try {
     await auth.signInWithEmailAndPassword(a, email.trim(), password)
   } catch (e) {
+    throw new Error(message(e))
+  }
+}
+
+/** Sign in (or sign up) with a Google account, in a popup window. */
+export async function signInWithGoogle() {
+  const { auth, a } = await fb()
+  try {
+    await auth.signInWithPopup(a, new auth.GoogleAuthProvider())
+  } catch (e) {
+    const code = (e as { code?: string })?.code
+    if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') return
     throw new Error(message(e))
   }
 }

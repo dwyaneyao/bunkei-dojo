@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CLOUD_CONFIGURED, resetPassword, signIn, signOut, signUp, syncNow, useCloud } from '../lib/cloud'
+import { CLOUD_CONFIGURED, resetPassword, signIn, signInWithGoogle, signOut, signUp, syncNow, useCloud } from '../lib/cloud'
 
 /** Sign up / sign in with email and password; once signed in, the record syncs by itself. */
 export default function Account() {
@@ -69,9 +69,16 @@ export default function Account() {
         if (ok) void run(() => signIn(email, password))
       }}
     >
-      <p className="muted small">
-        登录后，这台设备的记录会和账号里的合并，之后自动同步。第一次用请先「注册」，其他设备用同一个邮箱和密码「登录」。
-      </p>
+      <p className="muted small">登录后，这台设备的记录会和账号里的合并，之后自动同步。每台设备用同一个账号登录就行。</p>
+      <div className="actions">
+        <button className="btn primary google" type="button" disabled={busy} onClick={() => void run(signInWithGoogle)}>
+          <span className="g-mark" aria-hidden>
+            G
+          </span>
+          用 Google 账号登录
+        </button>
+      </div>
+      <p className="muted small or">或者用邮箱和密码（第一次用先「注册」）：</p>
       <div className="account-fields">
         <input
           className="token-input"
@@ -91,7 +98,7 @@ export default function Account() {
         />
       </div>
       <div className="actions">
-        <button className="btn primary" type="submit" disabled={busy || !ok}>
+        <button className="btn" type="submit" disabled={busy || !ok}>
           登录
         </button>
         <button className="btn" type="button" disabled={busy || !ok} onClick={() => void run(() => signUp(email, password))}>

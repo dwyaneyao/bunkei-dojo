@@ -1176,6 +1176,23 @@ table.items td {
 
 
 
+.btn.google {
+  gap: 10px;
+}
+.g-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  color: #4285f4;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+.account .or {
+  margin-top: 14px;
+}
 .account-fields {
   display: flex;
   gap: 10px;
