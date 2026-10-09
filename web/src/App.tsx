@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { loadProgress, isReady, useProgress, useSaveState } from './lib/store'
-import { startSync, useSync } from './lib/sync'
+import { CLOUD_CONFIGURED, startCloud, useCloud } from './lib/cloud'
 import { daysUntil } from './lib/util'
 import Home from './views/Home'
 import Session from './views/Session'
@@ -35,12 +35,13 @@ export default function App() {
   const [, force] = useState(0)
   useEffect(() => {
     loadProgress().then(() => {
-      startSync()
+      void startCloud()
       force((n) => n + 1)
     })
   }, [])
   const route = useRoute()
   const p = useProgress()
+  const cloud = useCloud()
   if (!isReady()) return <div className="shell muted">载入中…</div>
 
   const [head, arg] = route
@@ -88,11 +89,18 @@ export default function App() {
               </a>
             ))}
           </nav>
-          {left !== null && left >= 0 && (
-            <span className="countdown" title={p.settings.examDate}>
-              距考试 <b>{left}</b> 天
-            </span>
-          )}
+          <span className="top-right">
+            {left !== null && left >= 0 && (
+              <span className="countdown" title={p.settings.examDate}>
+                距考试 <b>{left}</b> 天
+              </span>
+            )}
+            {CLOUD_CONFIGURED && cloud.checked && (
+              <a className="account-chip" href="#/settings" title={cloud.email ?? '登录后手机和电脑自动同步'}>
+                {cloud.email ? (cloud.error ? '同步出错' : '已同步') : '登录'}
+              </a>
+            )}
+          </span>
         </div>
       </header>
       <main className="shell">
@@ -106,12 +114,12 @@ export default function App() {
 /** Only shown when something is wrong with saving to userdata/progress.json. */
 function SaveBanner() {
   const { state, error } = useSaveState()
-  const sync = useSync()
-  if (sync.on && sync.error)
+  const cloud = useCloud()
+  if (cloud.email && cloud.error)
     return (
       <div className="card warn small">
-        <b>云同步没成功：</b>
-        {sync.error}。作答都还在这台设备上，下次同步时会补上。可以到 <a href="#/settings">设置</a> 里看看。
+        <b>同步没成功：</b>
+        {cloud.error}。作答都还在这台设备上，下次同步时会补上。
       </div>
     )
   if (state === 'readonly')

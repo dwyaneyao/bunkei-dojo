@@ -233,8 +233,16 @@ kbd {
   opacity: 1;
   background: rgba(255, 255, 255, 0.12);
 }
-.countdown {
+.top-right {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.top-right:empty {
+  display: none;
+}
+.countdown {
   font-size: 0.9rem;
   opacity: 0.9;
 }
@@ -1168,6 +1176,19 @@ table.items td {
 
 
 
+.account-fields {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.account-chip {
+  font-size: 0.85rem;
+  text-decoration: none;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  opacity: 0.9;
+}
 .token-input {
   flex: 1;
   min-width: 200px;
