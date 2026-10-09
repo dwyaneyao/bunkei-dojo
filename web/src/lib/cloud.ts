@@ -5,12 +5,16 @@ import { covers, isProgress } from './merge'
 import { HAS_SERVER, getProgress, isReady, mergeIn, onLocalChange, type Progress } from './store'
 
 // Account login + automatic sync through Firebase (Auth + Firestore).
-// The whole record is one document, users/{uid}. Each device merges what it finds there into its own record
+// The Firebase project is shared with Leon's other sites, so this app keeps to its own collection:
+// the whole record is one document, bunkeiDojo/{uid}. Each device merges what it finds there into its own record
 // and writes back only when the document lacks something, inside a transaction, so two devices never
 // overwrite each other. Merging never drops an answer, so studying offline is fine: it catches up later.
 // Firebase is loaded lazily, only when configured.
 
 export const CLOUD_CONFIGURED = !!FIREBASE_CONFIG.apiKey
+
+/** Firestore collection for this app (Firestore rules: each user may only read/write bunkeiDojo/{their uid}). */
+const COLLECTION = 'bunkeiDojo'
 
 export interface CloudState {
   /** Auth state known (first answer from Firebase arrived). */
@@ -136,7 +140,7 @@ export function syncNow(): Promise<void> {
 async function syncOnce() {
   const { fs, db } = await fb()
   if (!uid) return
-  const ref = fs.doc(db, 'users', uid)
+  const ref = fs.doc(db, COLLECTION, uid)
   await fs.runTransaction(db, async (tx) => {
     const snap = await tx.get(ref)
     const remote = await decode(snap.data())
@@ -176,7 +180,7 @@ export async function startCloud() {
     void syncNow()
     // Another device wrote: merge it in right away (our own writes come back too and merge as a no-op).
     unwatch = fs.onSnapshot(
-      fs.doc(db, 'users', user.uid),
+      fs.doc(db, COLLECTION, user.uid),
       async (snap) => {
         try {
           const remote = await decode(snap.data())
