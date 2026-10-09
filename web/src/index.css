@@ -632,6 +632,16 @@ kbd {
   cursor: default;
   transform: none;
 }
+.btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--ai-2);
+}
+.sheet.ok .btn:focus-visible {
+  box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px color-mix(in srgb, var(--ok) 55%, transparent);
+}
+.sheet.bad .btn:focus-visible {
+  box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px color-mix(in srgb, var(--shu) 55%, transparent);
+}
 .btn.primary {
   background: var(--ai);
   border-color: var(--ai);
