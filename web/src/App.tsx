@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { loadProgress, isReady, useProgress, useSaveState } from './lib/store'
+import { startSync, useSync } from './lib/sync'
 import { daysUntil } from './lib/util'
 import Home from './views/Home'
 import Session from './views/Session'
@@ -33,7 +34,10 @@ const NAV: [string, string][] = [
 export default function App() {
   const [, force] = useState(0)
   useEffect(() => {
-    loadProgress().then(() => force((n) => n + 1))
+    loadProgress().then(() => {
+      startSync()
+      force((n) => n + 1)
+    })
   }, [])
   const route = useRoute()
   const p = useProgress()
@@ -102,6 +106,14 @@ export default function App() {
 /** Only shown when something is wrong with saving to userdata/progress.json. */
 function SaveBanner() {
   const { state, error } = useSaveState()
+  const sync = useSync()
+  if (sync.on && sync.error)
+    return (
+      <div className="card warn small">
+        <b>云同步没成功：</b>
+        {sync.error}。作答都还在这台设备上，下次同步时会补上。可以到 <a href="#/settings">设置</a> 里看看。
+      </div>
+    )
   if (state === 'readonly')
     return (
       <div className="card warn small">

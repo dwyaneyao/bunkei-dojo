@@ -1168,6 +1168,22 @@ table.items td {
 
 
 
+.token-input {
+  flex: 1;
+  min-width: 200px;
+  font: inherit;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+}
+.settings code {
+  font-size: 0.9em;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: var(--paper);
+}
 .settings-h {
   margin-top: 24px;
   padding-top: 16px;

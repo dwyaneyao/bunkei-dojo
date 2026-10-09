@@ -189,6 +189,13 @@ if (typeof window !== 'undefined') {
 
 // ---------- Updates ----------
 
+/** Called after every change made on this device (cloud sync hooks in here). */
+const changeHooks = new Set<() => void>()
+export function onLocalChange(fn: () => void) {
+  changeHooks.add(fn)
+  return () => changeHooks.delete(fn)
+}
+
 export function update(fn: (p: Progress) => void) {
   // Pick up anything another tab wrote since we last looked, then apply the change.
   const other = readLocal()
@@ -199,6 +206,17 @@ export function update(fn: (p: Progress) => void) {
   writeLocal()
   scheduleSave()
   emit()
+  changeHooks.forEach((h) => h())
+}
+
+/** Merge a copy from elsewhere (the cloud) into this one, if it holds anything new. Returns true if it did. */
+export function mergeIn(other: Progress): boolean {
+  if (covers(state, other)) return false
+  state = withDefaults(mergeProgress(state, other))
+  writeLocal()
+  scheduleSave()
+  emit()
+  return true
 }
 
 export function useProgress(): Progress {

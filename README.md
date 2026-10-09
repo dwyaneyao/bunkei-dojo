@@ -6,7 +6,9 @@
 
 https://dwyaneyao.github.io/bunkei-dojo/
 
-推送到 `main` 后，GitHub Actions 自动构建并发布（`.github/workflows/deploy.yml`）。网页版没有服务器：学习记录只存在打开它的那个浏览器里。要和电脑上的记录合在一起，用「设置 → 导出记录／导入记录」（导入是合并，不会删掉作答）。
+推送到 `main` 后，GitHub Actions 自动构建并发布（`.github/workflows/deploy.yml`）。网页版没有服务器：学习记录先存在打开它的那个浏览器里。
+
+**云同步**：「设置 → 云同步」里粘贴一个 GitHub fine-grained 令牌（只给私有仓库 `dwyaneyao/bunkei-dojo-data` 的 Contents 读写权限），这台设备的记录就会和那个仓库里的 `progress.json` 自动合并（打开时、作答停下几秒后、切回页面时）。每台设备粘贴一次；令牌只存在该设备的浏览器里。代码在 `web/src/lib/sync.ts`。没开云同步时，也可以用「导出记录／导入记录」手动合并（导入是合并，不会删掉作答）。
 
 仓库里不放个人数据：`userdata/`（学习记录）和 `sources/`（原始照片）只留在电脑上，见 `.gitignore`。
 
