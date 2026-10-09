@@ -92,21 +92,21 @@ const device = () => (HAS_SERVER ? 'pc' : /Mobi|Android|iPhone|iPad/i.test(navig
 function message(e: unknown): string {
   const code = (e as { code?: string })?.code ?? ''
   const map: Record<string, string> = {
-    'auth/invalid-credential': '邮箱或密码不对',
-    'auth/wrong-password': '邮箱或密码不对',
-    'auth/user-not-found': '这个邮箱还没注册',
-    'auth/email-already-in-use': '这个邮箱已经注册过了，请直接登录',
-    'auth/weak-password': '密码至少要 6 位',
-    'auth/invalid-email': '邮箱格式不对',
+    'auth/invalid-credential': '邮箱或密码错误',
+    'auth/wrong-password': '邮箱或密码错误',
+    'auth/user-not-found': '该邮箱尚未注册',
+    'auth/email-already-in-use': '该邮箱已注册，请直接登录',
+    'auth/weak-password': '密码至少需要 6 位',
+    'auth/invalid-email': '邮箱格式不正确',
     'auth/missing-password': '请输入密码',
-    'auth/network-request-failed': '连不上网络',
-    'auth/too-many-requests': '尝试次数太多，请稍后再试',
-    'auth/unauthorized-domain': 'Firebase 里还没添加这个网址（已获授权的网域）',
-    'auth/operation-not-allowed': 'Firebase 里还没启用这种登录方式',
-    'auth/popup-blocked': '浏览器拦住了登录窗口，请允许弹出窗口后再点一次',
-    'auth/account-exists-with-different-credential': '这个邮箱已经用密码注册过了，请用邮箱和密码登录',
-    'permission-denied': '数据库规则还没设置好',
-    unavailable: '连不上网络，联网后会自动补上',
+    'auth/network-request-failed': '网络连接失败',
+    'auth/too-many-requests': '尝试次数过多，请稍后再试',
+    'auth/unauthorized-domain': '当前网址尚未添加到 Firebase 的已授权网域',
+    'auth/operation-not-allowed': 'Firebase 尚未启用此登录方式',
+    'auth/popup-blocked': '登录窗口被浏览器拦截，请允许弹出窗口后重试',
+    'auth/account-exists-with-different-credential': '该邮箱已通过密码注册，请使用邮箱和密码登录',
+    'permission-denied': '数据库访问规则尚未正确配置',
+    unavailable: '网络连接失败，恢复联网后将自动同步',
   }
   return map[code] ?? (e instanceof Error ? e.message : String(e))
 }

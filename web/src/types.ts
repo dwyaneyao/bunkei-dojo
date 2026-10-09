@@ -13,10 +13,10 @@ export const TAG_LABEL: Record<ErrorTag, string> = {
 }
 
 export const TAG_HINT: Record<ErrorTag, string> = {
-  form: '前面的形不对（ます形、て形、な/の、だ 等）',
-  meaning: '文型的意思或使用限制没对上',
-  context: '和句子/对话没接上：时态、逻辑、回答了别的问题',
-  register: '礼貌程度不合适（对老师用了口语等）',
+  form: '接续形式错误（ます形、て形、な／の、だ 等）',
+  meaning: '不符合文型的意思或使用限制',
+  context: '与上下文不衔接：时态、逻辑有误，或答非所问',
+  register: '语体不当（如对老师使用口语）',
   word: '用词或搭配不自然',
 }
 

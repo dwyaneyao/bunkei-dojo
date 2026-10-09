@@ -8,7 +8,7 @@ https://dwyaneyao.github.io/bunkei-dojo/
 
 推送到 `main` 后，GitHub Actions 自动构建并发布（`.github/workflows/deploy.yml`）。网页版没有服务器：学习记录先存在打开它的那个浏览器里。
 
-**账号同步**：「设置 → 账号与同步」用邮箱和密码注册／登录（Firebase Auth）。登录后，整份记录存在 Firestore 的 `bunkeiDojo/{uid}` 文档里（gzip 压缩；这个 Firebase 项目会和 Leon 的其他网站共用，所以每个网站用自己的集合名）。每台设备在登录时、作答停下几秒后、切到后台时，把云端记录合并进来，云端缺的再写回去（事务里做，两台设备不会互相覆盖）；另一台设备写入时会实时收到。代码在 `web/src/lib/cloud.ts`，Firebase 配置在 `web/src/firebaseConfig.ts`（这些值本来就是公开的；权限靠 Firestore 规则：每个用户只能读写自己的 `bunkeiDojo/{uid}`）。不登录时，也可以用「导出记录／导入记录」手动合并（导入是合并，不会删掉作答）。
+**账号同步**：在「我的」页面用 Google 账号或邮箱和密码注册／登录（Firebase Auth）。登录后，整份记录存在 Firestore 的 `bunkeiDojo/{uid}` 文档里（gzip 压缩；这个 Firebase 项目会和 Leon 的其他网站共用，所以每个网站用自己的集合名）。每台设备在登录时、作答停下几秒后、切到后台时，把云端记录合并进来，云端缺的再写回去（事务里做，两台设备不会互相覆盖）；另一台设备写入时会实时收到。代码在 `web/src/lib/cloud.ts`，Firebase 配置在 `web/src/firebaseConfig.ts`（这些值本来就是公开的；权限靠 Firestore 规则：每个用户只能读写自己的 `bunkeiDojo/{uid}`）。不登录时，也可以用「导出记录／导入记录」手动合并（导入是合并，不会删掉作答）。
 
 仓库里不放个人数据：`userdata/`（学习记录）和 `sources/`（原始照片）只留在电脑上，见 `.gitignore`。
 
@@ -34,7 +34,7 @@ npm --prefix web run dev -- --mode sandbox
 
 | 路径 | 内容 |
 | --- | --- |
-| `content/l09.json` | 第 9 课：文型卡和练习题。一课一个文件 |
+| `content/l09.json` | 第 9 课：文型讲解和练习题。一课一个文件 |
 | `sources/L9/` | 原始照片：讲义（内容出处）和班级复习卷（只作题型参考，不录入工具）。不上传 |
 | `web/` | 应用源码（Vite + React + TypeScript） |
 | `userdata/progress.json` | 电脑版的学习记录（自动保存，`.bak` 是上一次的备份，`backup/` 里每天留一份）。不上传 |
@@ -43,7 +43,7 @@ npm --prefix web run dev -- --mode sandbox
 
 目前的考试题型是「＿＿に書いて文を完成させてください」（给定文型，自己补内容）。得分要同时满足：接续、文型的意思和限制、上下文（时态、逻辑、语体）。所以每个文型有四种练习：
 
-- 文型卡：意思、接续、用法限制、考场稳妥填法、常见坑、例句
+- 文型讲解：意思、接续、用法、答题常用搭配、常见错误、例句
 - `form` 接续：打出连接后的形，自动判分
 - `choice` 辨析：选最自然的填法，错项是常见错误并标注错因
 - `produce` 完成句：考试式开放题，写完对照检查点和参考答案自评

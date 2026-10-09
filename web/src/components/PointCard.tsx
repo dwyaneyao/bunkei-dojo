@@ -54,7 +54,7 @@ export default function PointCard({ point, head = true, aside }: { point: Point;
 
         {point.rules.length > 0 && (
           <section className="pc-sec">
-            <h4>什么时候用</h4>
+            <h4>用法</h4>
             <ul>
               {point.rules.map((r, i) => (
                 <li key={i}>
@@ -67,7 +67,7 @@ export default function PointCard({ point, head = true, aside }: { point: Point;
 
         {point.safe.length > 0 && (
           <section className="pc-sec">
-            <h4>考场稳妥填法</h4>
+            <h4>答题常用搭配</h4>
             <div className="chips">
               {point.safe.map((s, i) => (
                 <span key={i} className="safe-chip">
@@ -80,7 +80,7 @@ export default function PointCard({ point, head = true, aside }: { point: Point;
 
         {point.traps.length > 0 && (
           <section className="pc-sec">
-            <h4>常见坑</h4>
+            <h4>常见错误</h4>
             <ul className="traps">
               {point.traps.map((t, i) => (
                 <li key={i} className="trap">
@@ -110,7 +110,7 @@ export default function PointCard({ point, head = true, aside }: { point: Point;
 
         {point.examples.length > 0 && (
           <section className="pc-sec">
-            <h4>例句 · 自编</h4>
+            <h4>例句（自编）</h4>
             <ol className="examples">
               {point.examples.map((e, i) => (
                 <li key={i}>

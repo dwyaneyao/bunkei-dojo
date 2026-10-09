@@ -36,7 +36,7 @@ export default function Home() {
     <div className="home">
       {PROBLEMS.length > 0 && (
         <div className="card warn small">
-          <b>内容文件有问题：</b>
+          <b>内容文件存在问题：</b>
           <ul>
             {PROBLEMS.map((x, i) => (
               <li key={i}>{x}</li>
@@ -62,7 +62,7 @@ export default function Home() {
           <div className="eyebrow">今日の稽古</div>
           {remaining > 0 ? (
             <>
-              <h2>{done > 0 ? '继续今天的练习' : '开始今天的练习'}</h2>
+              <h2>{done > 0 ? '继续今日练习' : '开始今日练习'}</h2>
               <p className="hero-line">
                 复习 <b>{plan.reviews}</b> 题
                 {plan.newPoints.length > 0 && (
@@ -71,7 +71,7 @@ export default function Home() {
                     · 新文型 <b>{plan.newPoints.length}</b> 个
                   </>
                 )}{' '}
-                · 共 <b>{remaining}</b> 步
+                · 共 <b>{remaining}</b> 项
               </p>
               {plan.newPoints.length > 0 && (
                 <div className="chips">
@@ -85,18 +85,18 @@ export default function Home() {
               <div className="actions">
                 <a className="btn light big" href="#/session">
                   <Icon name="play" size={16} />
-                  {done > 0 ? '继续' : '开始'}
+                  {done > 0 ? '继续练习' : '开始练习'}
                 </a>
               </div>
             </>
           ) : (
             <>
-              <h2>今天的练习完成了</h2>
-              <p className="hero-line">复习都做完了，新文型也到了今天的上限。想再练，可以做一次模拟考。</p>
+              <h2>今日练习已完成</h2>
+              <p className="hero-line">到期的复习已全部完成，新文型也已达到今日上限。如需继续练习，可以进行一次模拟考。</p>
               <div className="actions">
                 <a className="btn light big" href="#/exam">
                   <Icon name="exam" size={18} />
-                  做模拟考
+                  开始模拟考
                 </a>
               </div>
             </>
@@ -107,7 +107,7 @@ export default function Home() {
             <div className="ring-num">
               <CountUp to={done} />
             </div>
-            <div className="ring-label">今天已做</div>
+            <div className="ring-label">今日已答</div>
           </div>
         </Ring>
       </section>
@@ -131,7 +131,7 @@ export default function Home() {
             {acc === null ? '—' : <CountUp to={acc} />}
             {acc !== null && <small>%</small>}
           </span>
-          <span className="stat-l">今天的正确率</span>
+          <span className="stat-l">今日正确率</span>
         </div>
         <a className="stat" href="#/points">
           <span className="stat-ico ai">
@@ -141,7 +141,7 @@ export default function Home() {
             <CountUp to={solid} />
             <small>/ {allPoints.length}</small>
           </span>
-          <span className="stat-l">隔天还会的文型</span>
+          <span className="stat-l">已巩固文型</span>
         </a>
         <a className="stat" href="#/me">
           <span className="stat-ico shu">
@@ -153,7 +153,7 @@ export default function Home() {
                 <CountUp to={left} />
                 <small>天</small>
               </span>
-              <span className="stat-l">距考试</span>
+              <span className="stat-l">距离考试</span>
             </>
           ) : (
             <>
@@ -172,7 +172,7 @@ export default function Home() {
             <div className="card-head">
               <h2 className="card-title">
                 <Icon name="layers" />
-                {l.title}・文型地图
+                {l.title} · 掌握概览
               </h2>
               <span className="muted small">
                 {counts.map((c, n) => (c ? `${LEVELS[n]} ${c}` : '')).filter(Boolean).join(' · ')}
@@ -191,7 +191,7 @@ export default function Home() {
                           key={pt.id}
                           href={`#/point/${pt.id}`}
                           className={`tile lv${m.level}` + (m.lastFail ? ' fail' : '')}
-                          title={`${LEVELS[m.level]}：${LEVEL_HINT[m.level]}${m.lastFail ? '（最近一次错）' : ''}`}
+                          title={`${LEVELS[m.level]}：${LEVEL_HINT[m.level]}${m.lastFail ? '（最近一次答错）' : ''}`}
                         >
                           <J furigana={false}>{pt.pattern}</J>
                         </a>
@@ -209,7 +209,7 @@ export default function Home() {
               ))}
               <span>
                 <i className="dot lv0 fail" />
-                最近错过
+                最近答错
               </span>
             </div>
           </section>
@@ -221,11 +221,11 @@ export default function Home() {
           <div className="card-head">
             <h2 className="card-title">
               <Icon name="chart" />
-              最近 30 天的错因
+              近 30 天错误类型
             </h2>
           </div>
           {stats.byTag.length === 0 ? (
-            <p className="empty small">还没有错题记录。做完成句时选「哪里不对」，这里会统计你最常出问题的环节。</p>
+            <p className="empty small">暂无错题记录。完成句自评时标注错误类型后，这里会统计你最常出错的环节。</p>
           ) : (
             <div className="bars">
               {stats.byTag.map(([t, n]) => (
@@ -244,11 +244,11 @@ export default function Home() {
           <div className="card-head">
             <h2 className="card-title">
               <Icon name="target" />
-              需要多练的文型
+              待加强文型
             </h2>
           </div>
           {stats.byPoint.length === 0 ? (
-            <p className="empty small">还没有。错过的文型会出现在这里。</p>
+            <p className="empty small">暂无。答错过的文型会显示在这里。</p>
           ) : (
             <div className="chips">
               {stats.byPoint.slice(0, 8).map(([id, n]) => (

@@ -27,20 +27,20 @@ export default function Points() {
       <header className="page-head">
         <div className="eyebrow">文型一覧</div>
         <h1 className="page-title">文型</h1>
-        <p className="page-sub">按讲义的顺序排列。点开一个文型，可以看完整的文型卡，或者单独专练它。</p>
+        <p className="page-sub">按讲义顺序排列。点击文型可查看完整讲解，或进行专项练习。</p>
       </header>
 
       <div className="toolbar">
         <label className="input-icon">
           <Icon name="search" size={18} />
-          <input className="input" placeholder="搜索文型或意思" value={q} onChange={(e) => setQ(e.target.value)} />
+          <input className="input" placeholder="搜索文型或释义" value={q} onChange={(e) => setQ(e.target.value)} />
         </label>
         <Segmented<Filter>
           value={filter}
           onChange={setFilter}
           options={[
             { value: 'all', label: '全部' },
-            { value: 'new', label: '未学' },
+            { value: 'new', label: '未学习' },
             { value: 'learning', label: '学习中' },
             { value: 'solid', label: '已巩固' },
           ]}

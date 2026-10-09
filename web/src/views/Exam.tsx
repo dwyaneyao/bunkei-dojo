@@ -87,7 +87,7 @@ export default function Exam() {
         <header className="page-head">
           <div className="eyebrow">模擬試験</div>
           <h1 className="page-title">模拟考</h1>
-          <p className="page-sub">和考试一样：一整张卷子先全部写完，再一题一题对答案、自评。每个文型出一道你最近没怎么做过的完成句，弱的文型优先。</p>
+          <p className="page-sub">模拟真实考试：先完成整张试卷，再逐题核对答案并自评。每个文型抽取一道你近期较少练习的完成句，薄弱文型优先出题。</p>
         </header>
 
         <section className="card">
@@ -95,7 +95,7 @@ export default function Exam() {
             <div>
               <div className="card-title">
                 <Icon name="exam" />
-                这次考 {n} 题
+                本次共 {n} 题
               </div>
               <p className="muted small" style={{ marginTop: 6 }}>
                 题型：<span lang="ja">＿＿に書いて文を完成させてください。</span>
@@ -121,7 +121,7 @@ export default function Exam() {
             <div className="opt-row">
               <div className="opt-row-l">
                 <b>范围</b>
-                <span>选要考的课</span>
+                <span>选择考查的课次</span>
               </div>
               <div className="chips">
                 {LESSONS.map((l) => {
@@ -148,10 +148,10 @@ export default function Exam() {
             </div>
             <div className="opt-row">
               <div className="opt-row-l">
-                <b>只考学过的文型</b>
-                <span>已经学过 {studied} 个</span>
+                <b>仅考已学文型</b>
+                <span>已学 {studied} 个</span>
               </div>
-              <Switch checked={onlyStudied} onChange={setOnlyStudied} label="只考学过的文型" />
+              <Switch checked={onlyStudied} onChange={setOnlyStudied} label="仅考已学文型" />
             </div>
           </div>
         </section>
@@ -166,15 +166,15 @@ export default function Exam() {
         <div className="exam-bar">
           <button
             className="icon-btn"
-            aria-label="放弃这次模拟考"
+            aria-label="放弃本次模拟考"
             onClick={() => {
-              if (confirm('放弃这次模拟考？写的答案不会保存。')) setPhase('setup')
+              if (confirm('确定放弃本次模拟考吗？已填写的答案将不会保存。')) setPhase('setup')
             }}
           >
             <Icon name="x" />
           </button>
           <span className="grow">
-            {Object.values(answers).filter((a) => a.some((x) => x?.trim())).length} / {list.length} 已作答
+            已作答 {Object.values(answers).filter((a) => a.some((x) => x?.trim())).length} / {list.length}
           </span>
           <span className="timer">
             <Icon name="clock" size={16} />
@@ -210,7 +210,7 @@ export default function Exam() {
               }}
             >
               <Icon name="check" size={18} />
-              交卷，开始对答案
+              交卷并核对答案
             </button>
           </div>
         </div>
@@ -224,14 +224,14 @@ export default function Exam() {
       <div>
         <div className="exam-bar">
           <span className="grow">
-            对答案 · 已自评 {gradedCount} / {list.length}
+            已自评 {gradedCount} / {list.length}
           </span>
           <span className="timer">
             <Icon name="clock" size={16} />
             {fmt(took)}
           </span>
           <button className="btn primary" disabled={gradedCount < list.length} onClick={() => setPhase('done')}>
-            看结果
+            查看结果
           </button>
         </div>
         <ol className="paper-list">
@@ -268,7 +268,7 @@ export default function Exam() {
         </ol>
         <div className="actions" style={{ justifyContent: 'center' }}>
           <button className="btn primary big" disabled={gradedCount < list.length} onClick={() => setPhase('done')}>
-            {gradedCount < list.length ? `还有 ${list.length - gradedCount} 题没自评` : '看结果'}
+            {gradedCount < list.length ? `还有 ${list.length - gradedCount} 题未自评` : '查看结果'}
           </button>
         </div>
       </div>
@@ -292,7 +292,7 @@ export default function Exam() {
         </div>
       </Ring>
       <p className="muted" style={{ maxWidth: '52ch', margin: '0 auto' }}>
-        「对」和「很轻松」算对。没写对的文型：学过的会在今天或明天的复习里再考（有别的句子就换一句），还没学的会排到新文型的最前面。
+        自评为「正确」或「熟练」的题目计为得分。未答对的文型中，已学的会在今明两天的复习中再次出现（尽量换用其他句子），未学的会优先安排为新文型。
       </p>
       {weak.length > 0 && (
         <div className="chips" style={{ justifyContent: 'center', marginTop: 18 }}>
@@ -305,7 +305,7 @@ export default function Exam() {
       )}
       <div className="actions" style={{ justifyContent: 'center', marginTop: 26 }}>
         <a className="btn primary big" href="#/">
-          回到今日
+          返回今日
         </a>
         <button className="btn big" onClick={() => setPhase('setup')}>
           再考一次

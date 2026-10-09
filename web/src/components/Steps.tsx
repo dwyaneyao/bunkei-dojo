@@ -47,7 +47,7 @@ function CardPeek({ point }: { point: string }) {
     <div className="peek">
       <button className="btn ghost small" onClick={() => setOpen(!open)}>
         <Icon name="book" size={16} />
-        {open ? '收起文型卡' : '看文型卡'}
+        {open ? '收起文型讲解' : '查看文型讲解'}
       </button>
       {open && <PointCard point={p} />}
     </div>
@@ -75,6 +75,7 @@ function Sheet({
   onNext,
   nextRef,
   extra,
+  titleLang = 'ja',
 }: {
   ok: boolean
   title: string
@@ -82,6 +83,7 @@ function Sheet({
   onNext: () => void
   nextRef: React.RefObject<HTMLButtonElement | null>
   extra?: ReactNode
+  titleLang?: string
 }) {
   return (
     <>
@@ -91,7 +93,7 @@ function Sheet({
           <div className="sheet-top">
             <Stamp kind={ok ? 'ok' : 'bad'} size={58} />
             <div style={{ minWidth: 0 }}>
-              <div className="sheet-title" lang="ja">
+              <div className="sheet-title" lang={titleLang}>
                 {title}
               </div>
               {children}
@@ -144,7 +146,7 @@ export function FormStep({ item, mode, onDone }: { item: FormItem; mode: Mode; o
       <div className="step-card">
         <Kind icon="pen" label="接续" point={item.point} />
         <p className="step-ask">
-          把下面接成一个完整的形，直接打出来
+          写出完整的接续形式
           {item.ask && (
             <>
               （<J>{item.ask}</J>）
@@ -160,7 +162,7 @@ export function FormStep({ item, mode, onDone }: { item: FormItem; mode: Mode; o
           lang="ja"
           value={v}
           disabled={res !== null}
-          placeholder="在这里输入…"
+          placeholder="输入答案…"
           onChange={(e) => setV(e.target.value)}
           onKeyDown={(e) => {
             if (isEnter(e)) {
@@ -172,7 +174,7 @@ export function FormStep({ item, mode, onDone }: { item: FormItem; mode: Mode; o
         {res === null && (
           <div className="actions">
             <button className="btn primary big" onClick={submit} disabled={!v.trim()}>
-              确定 <kbd>Enter</kbd>
+              提交 <kbd>Enter</kbd>
             </button>
           </div>
         )}
@@ -181,13 +183,14 @@ export function FormStep({ item, mode, onDone }: { item: FormItem; mode: Mode; o
       {res !== null && (
         <Sheet
           ok={res}
-          title={overruled ? '按你的判断算对' : res ? '正解！' : '不正解'}
+          title={overruled ? '已按你的判断记为正确' : res ? '正解！' : '不正解'}
+          titleLang={overruled ? 'zh-CN' : 'ja'}
           onNext={next}
           nextRef={nextBtn}
           extra={
             !res && (
-              <button className="btn ghost" onClick={overrule} title="比如写法不同（汉字／假名）但其实是对的">
-                我写的其实也对
+              <button className="btn ghost" onClick={overrule} title="例如汉字与假名写法不同，但答案实际正确">
+                我的答案也正确
               </button>
             )
           }
@@ -251,7 +254,7 @@ export function ChoiceStep({ item, mode, onDone }: { item: ChoiceItem; mode: Mod
     <div className="step">
       <div className="step-card">
         <Kind icon="eye" label="辨析" point={item.point} />
-        <p className="step-ask">哪个填进去最自然？</p>
+        <p className="step-ask">选出填入空格最恰当的一项</p>
         <Sentence text={item.prompt} />
         <ol className="options">
           {opts.map((o, n) => {
@@ -301,17 +304,17 @@ export function ProduceStep({ item, mode, onDone }: { item: ProduceItem; mode: M
     <div className="step">
       <div className="step-card">
         <Kind icon="exam" label="完成句" point={item.point} />
-        <p className="step-ask">在空格里写，把句子补完整。和考试一样，答案不止一个。</p>
+        <p className="step-ask">在空格处填写内容，完成句子。与考试相同，答案不唯一。</p>
         <Blanks prompt={item.prompt} values={vals} onChange={setVals} onEnter={() => setShown(true)} disabled={shown} autoFocus />
         {!shown && (
           <div className="actions">
             <button className="btn primary big" onClick={() => setShown(true)}>
-              写好了，对答案 <kbd>Enter</kbd>
+              提交并核对答案 <kbd>Enter</kbd>
             </button>
             {!hinted ? (
               <button className="btn ghost" onClick={() => setHinted(true)}>
                 <Icon name="bulb" size={18} />
-                给个提示
+                查看提示
               </button>
             ) : (
               <span className="hint">
@@ -353,10 +356,10 @@ export function ProduceStep({ item, mode, onDone }: { item: ProduceItem; mode: M
 }
 
 const GRADES: { g: Grade; label: string; sub: string; cls: string }[] = [
-  { g: 1, label: '✕ 不对', sub: '写不出／有硬伤', cls: 'g1' },
-  { g: 2, label: '△ 有问题', sub: '基本对，有小错', cls: 'g2' },
-  { g: 3, label: '◯ 对', sub: '检查点都过了', cls: 'g3' },
-  { g: 4, label: '◎ 很轻松', sub: '马上就写出来', cls: 'g4' },
+  { g: 1, label: '✕ 错误', sub: '未能写出或有明显错误', cls: 'g1' },
+  { g: 2, label: '△ 部分正确', sub: '基本正确，但有小错误', cls: 'g2' },
+  { g: 3, label: '◯ 正确', sub: '符合全部检查要点', cls: 'g3' },
+  { g: 4, label: '◎ 熟练', sub: '迅速、准确地写出', cls: 'g4' },
 ]
 
 /** Self-check: learner's sentence, the item's checklist, model answers, then grade + error tags. */
@@ -409,13 +412,13 @@ export function Reveal({
   return (
     <div className="reveal">
       <div className="panel">
-        <div className="lbl">你的句子</div>
+        <div className="lbl">你的答案</div>
         <Sentence text={compose(item.prompt, fills)} />
-        {empty && <div className="muted small">（没写）</div>}
+        {empty && <div className="muted small">（未作答）</div>}
       </div>
 
       <div className="panel">
-        <div className="lbl">逐条检查</div>
+        <div className="lbl">检查要点</div>
         <ul className="checks">
           {item.checks.map((c, i) => (
             <li key={i}>
@@ -452,7 +455,7 @@ export function Reveal({
 
       {graded === undefined ? (
         <div className="grade-box">
-          <div className="lbl">哪里不对？（可多选，不对或有问题时选）</div>
+          <div className="lbl">错误类型（可多选，答错或部分正确时选择）</div>
           <div className="tag-pick">
             {(Object.keys(TAG_LABEL) as ErrorTag[]).map((t) => (
               <button
@@ -465,7 +468,7 @@ export function Reveal({
               </button>
             ))}
           </div>
-          {hinted && <p className="muted small" style={{ marginTop: 10 }}>用了提示：写对了照样算对，但会更早再考一次，也不计入掌握程度。</p>}
+          {hinted && <p className="muted small" style={{ marginTop: 10 }}>本题使用了提示：答对仍记为正确，但会提前安排复习，且不计入掌握程度。</p>}
           <div className="grades">
             {grades.map((g) => (
               <button key={g.g} className={'grade ' + g.cls} onClick={() => grade(g.g)}>

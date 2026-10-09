@@ -36,14 +36,14 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
     return (
       <div className="card finish">
         <Stamp kind="ok" size={84} />
-        <h1>今天没有要做的了</h1>
-        <p className="muted">复习都做完了，新文型也到了每天的上限。可以做一次模拟考，或者到「文型」里专练某一个。</p>
+        <h1>今日暂无练习内容</h1>
+        <p className="muted">到期的复习已全部完成，新文型也已达到每日上限。你可以进行一次模拟考，或在「文型」页选择单个文型进行专项练习。</p>
         <div className="actions" style={{ justifyContent: 'center' }}>
           <a className="btn primary big" href="#/exam">
-            做模拟考
+            开始模拟考
           </a>
           <a className="btn big" href="#/points">
-            文型
+            浏览文型
           </a>
         </div>
       </div>
@@ -55,19 +55,19 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
       <div className="card finish">
         <Stamp kind={tally.bad === 0 ? 'ok' : 'tri'} size={92} />
         <h1 lang="ja">お疲れさまでした</h1>
-        <p className="muted">这一轮完成了</p>
+        <p className="muted">本轮练习已完成</p>
         <div className="finish-stats">
           <div>
             <b className="ok">
               <CountUp to={tally.ok} />
             </b>
-            <span className="muted small">对</span>
+            <span className="muted small">答对</span>
           </div>
           <div>
             <b className="bad">
               <CountUp to={tally.bad} />
             </b>
-            <span className="muted small">错</span>
+            <span className="muted small">答错</span>
           </div>
           <div>
             <b>
@@ -78,7 +78,7 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
         </div>
         {tally.missed.length > 0 && (
           <>
-            <p className="muted small">错过的文型，已经安排更早复习：</p>
+            <p className="muted small">以下文型有答错，已提前安排复习：</p>
             <div className="chips" style={{ justifyContent: 'center', marginTop: 10 }}>
               {[...new Set(tally.missed)].map((id) => (
                 <a key={id} className="chip" href={`#/point/${id}`}>
@@ -90,11 +90,11 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
         )}
         <div className="actions" style={{ justifyContent: 'center', marginTop: 26 }}>
           <a className="btn primary big" href="#/">
-            回到今日
+            返回今日
           </a>
           {mode === 'drill' && point && (
             <a className="btn big" href={`#/point/${point}`}>
-              回到文型卡
+              返回文型详情
             </a>
           )}
         </div>
@@ -149,7 +149,7 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
               setI(i + 1)
             }}
           >
-            看完了，开始练
+            已阅读，开始练习
             <Icon name="arrow" size={18} />
           </button>
         </div>
@@ -160,7 +160,7 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
     if (!it)
       body = (
         <div className="step step-card" key={i}>
-          <p className="muted">题目 {step.item} 不存在（内容可能改过）。</p>
+          <p className="muted">题目 {step.item} 不存在（内容可能已更新）。</p>
           <button className="btn" onClick={() => setI(i + 1)}>
             跳过
           </button>
@@ -174,7 +174,7 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
   return (
     <div className="session">
       <div className="focus-bar">
-        <a className="icon-btn" href={exitHref} aria-label="结束练习" title="结束练习（已做的都保存了）">
+        <a className="icon-btn" href={exitHref} aria-label="结束练习" title="结束练习（已作答的记录均已保存）">
           <Icon name="x" />
         </a>
         <div className="progress" aria-label={`进度 ${i + 1} / ${total}`}>

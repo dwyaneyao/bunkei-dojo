@@ -38,16 +38,16 @@ export default function Me() {
     if (!f) return
     try {
       const n = importProgress(await f.text())
-      toast(n > 0 ? `合并好了：新增 ${n} 条作答` : '合并好了：没有新的作答')
+      toast(n > 0 ? `导入完成：新增 ${n} 条作答记录` : '导入完成：没有新的作答记录')
     } catch (e) {
-      toast(`没能导入：${e instanceof Error ? e.message : e}`)
+      toast(`导入失败：${e instanceof Error ? e.message : e}`)
     }
   }
 
   const syncText = c.busy
     ? '正在同步…'
     : c.error
-      ? `上次同步没成功：${c.error}`
+      ? `上次同步失败：${c.error}`
       : c.last
         ? `已同步 · ${new Date(c.last).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
         : '正在同步…'
@@ -70,19 +70,19 @@ export default function Me() {
                 <span className={'sync-dot ' + (c.error ? 'err' : c.busy ? 'busy' : 'on')}>{syncText}</span>
               </div>
               <div className="row">
-                <button className="btn" disabled={c.busy} onClick={() => void syncNow().then(() => toast('同步好了'))}>
+                <button className="btn" disabled={c.busy} onClick={() => void syncNow().then(() => toast('同步完成'))}>
                   <Icon name="refresh" size={17} />
                   立即同步
                 </button>
                 <button
                   className="btn ghost"
                   onClick={() => {
-                    if (confirm('退出登录后，这台设备不再同步（记录还留在这台设备上）。退出吗？'))
+                    if (confirm('退出登录后，本设备将停止同步（已有记录仍保留在本设备上）。确定退出吗？'))
                       void signOut().then(() => toast('已退出登录'))
                   }}
                 >
                   <Icon name="logout" size={17} />
-                  退出
+                  退出登录
                 </button>
               </div>
             </div>
@@ -90,9 +90,9 @@ export default function Me() {
             <div className="profile">
               <Avatar size={64} />
               <div className="profile-main">
-                <b>还没登录</b>
+                <b>未登录</b>
                 <div className="muted">
-                  {HAS_SERVER ? '记录保存在这台电脑上。' : '记录只保存在这个浏览器里。'}登录后，手机和电脑的记录会自动合并。
+                  {HAS_SERVER ? '学习记录保存在本机。' : '学习记录仅保存在当前浏览器中。'}登录后，各设备的记录将自动同步。
                 </div>
               </div>
               {CLOUD_CONFIGURED && (
@@ -108,13 +108,13 @@ export default function Me() {
         <section className="group">
           <div className="group-h">学习</div>
           <div className="list">
-            <Row icon="calendar" title="考试日期" sub="首页和侧边栏会显示倒计时">
+            <Row icon="calendar" title="考试日期" sub="用于在首页和侧边栏显示倒计时">
               <input type="date" className="input" value={s.examDate} onChange={(e) => setSettings({ examDate: e.target.value })} />
             </Row>
-            <Row icon="sparkle" title="每天新文型" sub="离考试近可以调高；设为 0 只做复习">
+            <Row icon="sparkle" title="每日新文型" sub="临近考试时可适当调高；设为 0 则只复习">
               <Stepper value={s.newPerDay} min={0} max={21} onChange={(v) => setSettings({ newPerDay: v })} />
             </Row>
-            <Row icon="target" title="目标记住率" sub="越高，复习越勤">
+            <Row icon="target" title="目标正确率" sub="复习时预期能答对的比例。设得越高，复习越频繁">
               <Segmented<number>
                 value={s.retention}
                 onChange={(v) => setSettings({ retention: v })}
@@ -142,7 +142,7 @@ export default function Me() {
                 ]}
               />
             </Row>
-            <Row icon="book" title="振假名" sub="关掉后汉字不注音">
+            <Row icon="book" title="振假名" sub="关闭后不再为汉字注音">
               <Switch checked={s.furigana} onChange={(v) => setSettings({ furigana: v })} label="振假名" />
             </Row>
           </div>
@@ -157,7 +157,7 @@ export default function Me() {
               </span>
               <span className="row-main">
                 <b>导出记录</b>
-                <span>{log.length} 条作答，存成一个文件</span>
+                <span>将 {log.length} 条作答记录导出为文件</span>
               </span>
               <span className="row-end inline">
                 <Icon name="right" size={18} />
@@ -169,7 +169,7 @@ export default function Me() {
               </span>
               <span className="row-main">
                 <b>导入记录</b>
-                <span>和这台设备的记录合并，不会删掉任何作答</span>
+                <span>与本设备的记录合并，不会删除任何已有作答</span>
               </span>
               <span className="row-end inline">
                 <Icon name="right" size={18} />
@@ -186,7 +186,7 @@ export default function Me() {
               }}
             />
           </div>
-          {HAS_SERVER && <p className="muted small" style={{ margin: '10px 6px 0' }}>电脑版：记录同时保存在 exam-review/userdata/progress.json，每天自动备份一份。</p>}
+          {HAS_SERVER && <p className="muted small" style={{ margin: '10px 6px 0' }}>电脑版：记录同时保存在 exam-review/userdata/progress.json，并每日自动备份。</p>}
         </section>
 
         <section className="group">
@@ -197,8 +197,8 @@ export default function Me() {
                 <Icon name="compass" size={19} />
               </span>
               <span className="row-main">
-                <b>这个工具怎么练</b>
-                <span>题型分析、复习方法、掌握程度的含义</span>
+                <b>学习方法</b>
+                <span>题型分析、复习机制与掌握程度说明</span>
               </span>
               <span className="row-end inline">
                 <Icon name="right" size={18} />

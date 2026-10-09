@@ -31,7 +31,7 @@ const NAV: { href: string; label: string; icon: IconName; match: string[] }[] = 
   { href: '#/', label: '今日', icon: 'home', match: [''] },
   { href: '#/points', label: '文型', icon: 'book', match: ['points', 'point'] },
   { href: '#/exam', label: '模拟考', icon: 'exam', match: ['exam'] },
-  { href: '#/guide', label: '方法', icon: 'compass', match: ['guide'] },
+  { href: '#/guide', label: '学习方法', icon: 'compass', match: ['guide'] },
 ]
 
 const TABS: { href: string; label: string; icon: IconName; match: string[] }[] = [
@@ -103,7 +103,7 @@ export default function App() {
 
   const meName = cloud.name || cloud.email || '未登录'
   const syncCls = !cloud.email ? '' : cloud.error ? 'err' : cloud.busy ? 'busy' : 'on'
-  const syncText = !CLOUD_CONFIGURED || !cloud.email ? '只保存在这台设备' : cloud.error ? '同步出错' : cloud.busy ? '同步中…' : '已同步'
+  const syncText = !CLOUD_CONFIGURED || !cloud.email ? '仅保存在本设备' : cloud.error ? '同步失败' : cloud.busy ? '正在同步…' : '已同步'
 
   return (
     <div className={'app' + (focus ? ' focus' : '')}>
@@ -126,7 +126,7 @@ export default function App() {
         <div className="side-foot">
           {left !== null && left >= 0 && (
             <div className="side-count">
-              距考试 <b>{left}</b>天
+              距离考试 <b>{left}</b> 天
             </div>
           )}
           <a className="me-link" href="#/me">
@@ -189,18 +189,18 @@ function SaveBanner() {
   if (cloud.email && cloud.error)
     return (
       <div className="card warn small banner">
-        <b>同步没成功：</b>
-        {cloud.error}。作答都还在这台设备上，下次同步时会补上。
+        <b>同步失败：</b>
+        {cloud.error}。作答记录仍保存在本设备上，将在下次同步时上传。
       </div>
     )
   if (state === 'readonly')
     return (
       <div className="card warn small banner">
-        <b>学习记录文件读不了，所以这次不会写入它（避免覆盖）。</b>新的作答只存在这个浏览器里。请把这条信息告诉 Claude：
+        <b>无法读取学习记录文件。为避免覆盖，本次不会写入该文件。</b>新的作答暂存于当前浏览器。请将以下信息告知 Claude：
         <div className="pre">{error}</div>
       </div>
     )
   if (state === 'offline')
-    return <div className="card warn small banner">暂时连不上本地服务器：作答先存在浏览器里，连上后会自动写入文件。</div>
+    return <div className="card warn small banner">暂时无法连接本地服务器。作答已暂存于浏览器，连接恢复后将自动写入文件。</div>
   return null
 }

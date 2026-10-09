@@ -11,7 +11,7 @@ export type Mode = 'daily' | 'exam' | 'drill'
 export interface Attempt {
   id: string
   t: number
-  /** Last change to the attempt after it was recorded (e.g. 「我写的其实也对」). */
+  /** Last change to the attempt after it was recorded (e.g. 「我的答案也正确」). */
   at?: number
   item: string
   point: string
@@ -143,7 +143,7 @@ async function flush(keepalive = false) {
   try {
     const r = await fetch('/api/progress', { method: 'PUT', body: JSON.stringify(state), keepalive })
     if (r.status === 409) {
-      diskError = (await r.json())?.error ?? 'progress.json 读不了'
+      diskError = (await r.json())?.error ?? '无法读取 progress.json'
       setSaveState('readonly')
       return
     }
@@ -273,7 +273,7 @@ export const exportProgress = () => JSON.stringify(state)
 /** Merge a record exported from another copy into this one. Returns how many new answers it brought. */
 export function importProgress(text: string): number {
   const other = JSON.parse(text.replace(/^﻿/, ''))
-  if (!isProgress(other)) throw new Error('这不是学习记录文件')
+  if (!isProgress(other)) throw new Error('该文件不是有效的学习记录')
   const before = state.log.length
   update((p) => {
     Object.assign(p, withDefaults(mergeProgress(p, other as Progress)))

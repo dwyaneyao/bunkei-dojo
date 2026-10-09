@@ -43,7 +43,7 @@ function examServer(userdata: string): Plugin {
             send(res, 200, JSON.stringify(readJson(PROGRESS)))
           } catch (e) {
             // Never pretend the file is empty: the app goes read-only instead of overwriting it.
-            send(res, 500, JSON.stringify({ error: `progress.json 读不了：${e}` }))
+            send(res, 500, JSON.stringify({ error: `无法读取 progress.json：${e}` }))
           }
           return
         }
@@ -60,7 +60,7 @@ function examServer(userdata: string): Plugin {
               try {
                 disk = readJson(PROGRESS)
               } catch (e) {
-                return send(res, 409, JSON.stringify({ error: `progress.json 读不了，没有覆盖它：${e}` }))
+                return send(res, 409, JSON.stringify({ error: `无法读取 progress.json，为避免覆盖已停止写入：${e}` }))
               }
               // Merge with what is on disk, so a stale tab or an empty browser never wipes the record.
               const merged = isProgress(disk) ? mergeProgress(disk as Mergeable, incoming) : incoming

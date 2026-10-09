@@ -113,14 +113,14 @@ export function buildDrill(pointId: string): Step[] {
 
 // ---------- Mastery ----------
 
-export const LEVELS = ['未学', '学习中', '当天写对', '隔天还会', '能迁移'] as const
+export const LEVELS = ['未学习', '学习中', '初步掌握', '已巩固', '熟练运用'] as const
 
 export const LEVEL_HINT = [
-  '还没学',
-  '学过，但还没在完成句里独立写对',
-  '完成句独立写对过（没用提示）',
-  '在两个不同的日子里，完成句都独立写对了',
-  '两个不同的日子都写对，而且是在两个以上不同的句子里',
+  '尚未学习',
+  '已学习，但尚未在完成句中独立答对',
+  '已在完成句中独立答对（未使用提示）',
+  '在两个不同的日期独立答对完成句',
+  '在两个不同的日期独立答对，且涉及两道以上不同的完成句',
 ]
 
 export interface Mastery {

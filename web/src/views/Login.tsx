@@ -15,7 +15,7 @@ export default function Login() {
   // Signed in (here or on another tab): go back to the app.
   useEffect(() => {
     if (c.email) {
-      toast(`已登录 ${c.name || c.email}`)
+      toast(`已登录：${c.name || c.email}`)
       location.hash = '#/'
     }
   }, [c.email, c.name])
@@ -49,15 +49,15 @@ export default function Login() {
         <ul>
           <li>
             <Icon name="cloud" />
-            登录后，手机和电脑的记录自动合并
+            登录后，多台设备的记录自动同步
           </li>
           <li>
             <Icon name="refresh" />
-            按遗忘曲线安排每一道题的复习
+            依据遗忘曲线为每道题安排复习
           </li>
           <li>
             <Icon name="exam" />
-            模拟考：整张卷子先写完再对答案
+            模拟考：完成整张试卷后统一核对
           </li>
         </ul>
       </aside>
@@ -65,21 +65,21 @@ export default function Login() {
       <section className="login-form">
         <h2>{mode === 'in' ? '登录' : '注册'}</h2>
         <p className="muted" style={{ marginTop: 6 }}>
-          用同一个账号在每台设备上登录，记录就会自动同步。
+          在各设备上登录同一账号，学习记录即可自动同步。
         </p>
 
         {!CLOUD_CONFIGURED ? (
-          <p className="form-msg bad">账号同步还没有接上。</p>
+          <p className="form-msg bad">账号同步功能尚未配置。</p>
         ) : (
           <>
             <div className="actions">
               <button className="btn google big block" disabled={busy} onClick={() => void run(signInWithGoogle)}>
                 <GoogleG />
-                用 Google 账号继续
+                使用 Google 账号登录
               </button>
             </div>
 
-            <div className="or">或者用邮箱</div>
+            <div className="or">或使用邮箱</div>
 
             <form
               className="form-stack"
@@ -96,7 +96,7 @@ export default function Login() {
                 }}
                 options={[
                   { value: 'in', label: '登录' },
-                  { value: 'up', label: '第一次用，注册' },
+                  { value: 'up', label: '注册新账号' },
                 ]}
               />
               <label className="input-icon">
@@ -123,9 +123,9 @@ export default function Login() {
                   className="link small"
                   style={{ justifySelf: 'center' }}
                   disabled={busy || !validEmail}
-                  onClick={() => void run(() => resetPassword(email), '重设密码的邮件已经发出，请查收（也看看垃圾邮件）。')}
+                  onClick={() => void run(() => resetPassword(email), '密码重置邮件已发送，请查收（如未收到，请检查垃圾邮件）。')}
                 >
-                  忘记密码？{!validEmail && '（先填邮箱）'}
+                  忘记密码？{!validEmail && '（请先填写邮箱）'}
                 </button>
               )}
             </form>
@@ -134,9 +134,9 @@ export default function Login() {
         )}
 
         <p className="skip">
-          不登录也能用，记录只保存在这台设备上。
+          无需登录也可使用，学习记录仅保存在本设备上。
           <a className="link" href="#/">
-            先去练习
+            直接开始练习
           </a>
         </p>
       </section>

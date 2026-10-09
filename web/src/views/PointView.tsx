@@ -11,7 +11,7 @@ const KIND = { form: '接续', choice: '辨析', produce: '完成句' } as const
 export default function PointView({ id }: { id: string }) {
   const p = useProgress()
   const pt = pointById.get(id)
-  if (!pt) return <p className="empty">找不到这个文型。</p>
+  if (!pt) return <p className="empty">未找到该文型。</p>
   const m = mastery(p, id)
   const items = itemsOf(id)
   const now = Date.now()
@@ -21,7 +21,7 @@ export default function PointView({ id }: { id: string }) {
     <div className="point-view">
       <a href="#/points" className="back">
         <Icon name="left" size={18} />
-        文型
+        文型列表
       </a>
 
       <div className="stagger">
@@ -40,7 +40,7 @@ export default function PointView({ id }: { id: string }) {
               </div>
               <a className="btn primary" href={`#/session/drill/${id}`}>
                 <Icon name="pen" size={18} />
-                专练这个文型
+                专项练习
               </a>
             </div>
           }
@@ -50,7 +50,7 @@ export default function PointView({ id }: { id: string }) {
           <div className="card-head">
             <h2 className="card-title">
               <Icon name="exam" />
-              {items.length} 道练习
+              练习题 · {items.length} 道
             </h2>
             <span className="muted small">{lesson?.title}</span>
           </div>
@@ -67,7 +67,7 @@ export default function PointView({ id }: { id: string }) {
                   </span>
                   <span className="item-state">
                     {last && (last.ok ? <Icon name="check" size={16} className="ok" /> : <Icon name="x" size={16} className="bad" />)}
-                    {card ? (card.due <= now ? '该复习了' : formatInterval(card.due - now) + '后') : '未做'}
+                    {card ? (card.due <= now ? '待复习' : formatInterval(card.due - now) + '后复习') : '未作答'}
                   </span>
                 </li>
               )

@@ -32,14 +32,14 @@ export const PROBLEMS: string[] = (() => {
       if (seen.has(i.id)) out.push(`重复的 id：${i.id}`)
       seen.add(i.id)
       if (!pointById.has(i.point)) out.push(`${i.id}：文型 ${i.point} 不存在`)
-      if (i.type === 'choice' && i.options.filter((o) => o.ok).length !== 1) out.push(`${i.id}：选择题要有且只有一个正确项`)
+      if (i.type === 'choice' && i.options.filter((o) => o.ok).length !== 1) out.push(`${i.id}：选择题必须有且仅有一个正确选项`)
       if (i.type === 'choice' && !i.prompt.includes('＿＿')) out.push(`${i.id}：题干缺少＿＿`)
       if (i.type === 'produce') {
         const n = blankCount(i.prompt)
         if (n < 1) out.push(`${i.id}：完成句缺少＿＿`)
-        for (const m of i.models) if (!m.includes('**')) out.push(`${i.id}：参考答案要用 ** 标出填空部分`)
+        for (const m of i.models) if (!m.includes('**')) out.push(`${i.id}：参考答案须用 ** 标出填空部分`)
       }
-      if (i.type === 'form' && i.answers.length === 0) out.push(`${i.id}：没有答案`)
+      if (i.type === 'form' && i.answers.length === 0) out.push(`${i.id}：缺少答案`)
     }
   }
   return out
