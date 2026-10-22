@@ -18,6 +18,17 @@ const KANA: [RegExp, string][] = [
   [/込/g, 'こ'],
   [/頃/g, 'ころ'],
   [/子供/g, '子ども'],
+  [/勿論/g, 'もちろん'],
+  [/切れ/g, 'きれ'],
+  [/頂/g, 'いただ'],
+  [/致し/g, 'いたし'],
+  [/積も?り/g, 'つもり'],
+  [/居り/g, 'おり'],
+  [/兼ね/g, 'かね'],
+  [/事に/g, 'ことに'],
+  [/序で/g, 'ついで'],
+  [/で無く/g, 'でなく'],
+  [/下さい/g, 'ください'],
 ]
 
 /** Normalise typed Japanese for comparison: width, spaces, punctuation, common kanji spellings. */
