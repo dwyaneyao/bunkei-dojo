@@ -34,8 +34,8 @@ npm --prefix web run dev -- --mode sandbox
 
 | 路径 | 内容 |
 | --- | --- |
-| `content/l09.json` | 第 9 课：文型讲解和练习题。一课一个文件 |
-| `sources/L9/` | 原始照片：讲义（内容出处）和班级复习卷（只作题型参考，不录入工具）。不上传 |
+| `content/l09.json`、`content/l10.json` | 第 9、10 课：文型讲解和练习题。一课一个文件 |
+| `sources/L9/`、`sources/L10/` | 原始照片：讲义（内容出处）和班级复习卷（只作题型参考，不录入工具）。不上传 |
 | `web/` | 应用源码（Vite + React + TypeScript） |
 | `userdata/progress.json` | 电脑版的学习记录（自动保存，`.bak` 是上一次的备份，`backup/` 里每天留一份）。不上传 |
 

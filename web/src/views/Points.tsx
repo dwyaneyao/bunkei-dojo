@@ -22,6 +22,14 @@ export default function Points() {
     return true
   }
 
+  // With several lessons, "nothing matches" is shown once for the whole list, not once per lesson.
+  const shown = LESSONS.map((l) => ({
+    l,
+    groups: l.groups
+      .map((g) => ({ g, pts: l.points.filter((pt) => pt.group === g.id && keep(pt.id, pt.pattern, pt.meaning)) }))
+      .filter((x) => x.pts.length),
+  }))
+
   return (
     <div>
       <header className="page-head">
@@ -47,13 +55,11 @@ export default function Points() {
         />
       </div>
 
-      {LESSONS.map((l) => {
-        const groups = l.groups
-          .map((g) => ({ g, pts: l.points.filter((pt) => pt.group === g.id && keep(pt.id, pt.pattern, pt.meaning)) }))
-          .filter((x) => x.pts.length)
+      {shown.every((x) => x.groups.length === 0) && <p className="empty">没有符合条件的文型。</p>}
+
+      {shown.map(({ l, groups }) => {
         return (
           <section key={l.id}>
-            {groups.length === 0 && <p className="empty">没有符合条件的文型。</p>}
             {groups.map(({ g, pts }) => (
               <div key={g.id}>
                 <h3 className="group-title">
