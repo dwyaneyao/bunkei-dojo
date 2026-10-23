@@ -89,12 +89,26 @@ function examServer(userdata: string): Plugin {
   }
 }
 
+// Identifies this build. The published app compares it with dist/version.json to notice a newer deploy.
+const BUILD = process.env.GITHUB_SHA ?? new Date().toISOString()
+
+function versionFile(): Plugin {
+  return {
+    name: 'version-file',
+    apply: 'build',
+    generateBundle() {
+      this.emitFile({ type: 'asset', fileName: 'version.json', source: JSON.stringify({ build: BUILD }) })
+    },
+  }
+}
+
 export default defineConfig(({ mode }) => {
   const sandbox = mode === 'sandbox'
   return {
     // Relative asset paths, so the built site works under any sub-path (e.g. GitHub Pages /<repo>/).
     base: './',
-    plugins: [react(), examServer(path.join(APP, sandbox ? 'userdata-sandbox' : 'userdata'))],
+    plugins: [react(), examServer(path.join(APP, sandbox ? 'userdata-sandbox' : 'userdata')), versionFile()],
+    define: { 'import.meta.env.VITE_BUILD': JSON.stringify(BUILD) },
     server: { port: sandbox ? 5180 : 5179, strictPort: true, fs: { allow: [APP] } },
   }
 })

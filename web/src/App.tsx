@@ -3,6 +3,7 @@ import { loadProgress, isReady, useProgress, useSaveState } from './lib/store'
 import { CLOUD_CONFIGURED, startCloud, useCloud } from './lib/cloud'
 import { useIsFocus } from './lib/focus'
 import { useToast } from './lib/toast'
+import { useUpdate } from './lib/update'
 import { daysUntil } from './lib/util'
 import { Avatar, Icon, Seal, type IconName } from './components/ui'
 import Home from './views/Home'
@@ -54,6 +55,9 @@ export default function App() {
   const cloud = useCloud()
   const focus = useIsFocus()
   const toast = useToast()
+  const [head = '', arg] = route
+  // A newer deploy reloads browsing pages at once; during practice, an exam or login it only offers a reload.
+  const update = useUpdate(!['session', 'exam', 'login'].includes(head))
 
   // Light / dark / follow the system.
   const theme = p.settings.theme ?? 'auto'
@@ -70,7 +74,6 @@ export default function App() {
       </div>
     )
 
-  const [head = '', arg] = route
   const left = daysUntil(p.settings.examDate)
 
   let view
@@ -154,6 +157,15 @@ export default function App() {
 
       <main className="main">
         <div className="content">
+          {update && (
+            <div className="card small banner">
+              已有新版本。
+              <button className="link" onClick={() => location.reload()}>
+                刷新
+              </button>
+              后使用（已作答的记录都已保存）。
+            </div>
+          )}
           <SaveBanner />
           <div className="view" key={head + '/' + (arg ?? '')}>
             {view}
