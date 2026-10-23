@@ -1,4 +1,4 @@
-import { ITEMS, POINTS, itemsOf, pointById } from '../content'
+import { ITEMS, itemsOf, pointById, pointsIn, scopeOf } from '../content'
 import type { ErrorTag, Item } from '../types'
 import { dayKey, type Attempt, type Progress } from './store'
 
@@ -42,13 +42,15 @@ export interface DailyPlan {
  * Today's queue: old material first (due reviews + next unseen item of studied points), then new points.
  * A new point: card → form drills → choice items; its first exam-style item comes at the end of the
  * session so there is a gap between seeing the card and producing.
+ * Only points of the chosen lesson (settings.lesson, or `scope`) take part.
  */
-export function buildDaily(p: Progress, now = Date.now()): DailyPlan {
+export function buildDaily(p: Progress, scope = scopeOf(p.settings.lesson), now = Date.now()): DailyPlan {
   const horizon = endOfToday(now)
   const reviewIds: string[] = []
   const pendingIds: string[] = []
+  const points = pointsIn(scope)
 
-  for (const pt of POINTS) {
+  for (const pt of points) {
     if (!p.intro[pt.id]) continue
     const its = itemsOf(pt.id)
     const today = dayKey(now)
@@ -76,7 +78,7 @@ export function buildDaily(p: Progress, now = Date.now()): DailyPlan {
   const room = Math.max(0, p.settings.newPerDay - introducedToday)
   // Unstudied points in list order, except that points already missed (e.g. in a mock exam) come first.
   const missed = new Set(p.log.filter((a) => !a.ok).map((a) => a.point))
-  const newPoints = POINTS.filter((pt) => !p.intro[pt.id])
+  const newPoints = points.filter((pt) => !p.intro[pt.id])
     .map((pt, i) => ({ id: pt.id, rank: (missed.has(pt.id) ? 0 : 1000) + i }))
     .sort((a, b) => a.rank - b.rank)
     .slice(0, room)
@@ -162,12 +164,13 @@ export function errorTags(a: Attempt): ErrorTag[] {
   return []
 }
 
-export function errorStats(p: Progress, sinceDays = 30, now = Date.now()) {
+/** Mistakes of the last `sinceDays` days, by error type and by point; `only` limits them to some points. */
+export function errorStats(p: Progress, only?: Set<string>, sinceDays = 30, now = Date.now()) {
   const since = now - sinceDays * 86_400_000
   const byTag = new Map<ErrorTag, number>()
   const byPoint = new Map<string, number>()
   for (const a of p.log) {
-    if (a.t < since) continue
+    if (a.t < since || (only && !only.has(a.point))) continue
     const tags = errorTags(a)
     if (!tags.length && a.ok) continue
     for (const t of tags) byTag.set(t, (byTag.get(t) ?? 0) + 1)

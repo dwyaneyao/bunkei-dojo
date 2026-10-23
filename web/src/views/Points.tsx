@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { LESSONS, itemsOf } from '../content'
+import { itemsOf, lessonsIn, scopeOf } from '../content'
 import { LEVELS, mastery } from '../lib/plan'
-import { useProgress } from '../lib/store'
+import { setSettings, useProgress } from '../lib/store'
 import { J, plain } from '../lib/markup'
 import { Icon, Segmented } from '../components/ui'
+import LessonPicker from '../components/LessonPicker'
 
 type Filter = 'all' | 'new' | 'learning' | 'solid'
 
@@ -22,8 +23,9 @@ export default function Points() {
     return true
   }
 
-  // With several lessons, "nothing matches" is shown once for the whole list, not once per lesson.
-  const shown = LESSONS.map((l) => ({
+  // The lesson chosen on the home page; "nothing matches" is shown once, not once per lesson.
+  const scope = scopeOf(p.settings.lesson)
+  const shown = lessonsIn(scope).map((l) => ({
     l,
     groups: l.groups
       .map((g) => ({ g, pts: l.points.filter((pt) => pt.group === g.id && keep(pt.id, pt.pattern, pt.meaning)) }))
@@ -39,6 +41,7 @@ export default function Points() {
       </header>
 
       <div className="toolbar">
+        <LessonPicker value={scope} onChange={(v) => setSettings({ lesson: v })} />
         <label className="input-icon">
           <Icon name="search" size={18} />
           <input className="input" placeholder="搜索文型或释义" value={q} onChange={(e) => setQ(e.target.value)} />
@@ -55,7 +58,19 @@ export default function Points() {
         />
       </div>
 
-      {shown.every((x) => x.groups.length === 0) && <p className="empty">没有符合条件的文型。</p>}
+      {shown.every((x) => x.groups.length === 0) && (
+        <p className="empty">
+          没有符合条件的文型。
+          {scope !== 'all' && (
+            <>
+              当前只显示{shown[0].l.title}，
+              <button className="link" onClick={() => setSettings({ lesson: 'all' })}>
+                查看全部
+              </button>
+            </>
+          )}
+        </p>
+      )}
 
       {shown.map(({ l, groups }) => {
         return (
