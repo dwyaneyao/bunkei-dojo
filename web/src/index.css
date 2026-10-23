@@ -2779,3 +2779,72 @@ label.list-row:hover {
 .paper-list > li.paper-sec:first-child {
   padding-top: 8px;
 }
+
+/* ---------- Guided completion ---------- */
+
+.zh-line {
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--ai-2);
+  border-radius: 8px;
+  background: var(--ai-soft);
+  color: var(--ink);
+  line-height: 1.7;
+}
+.paper-item .zh-line {
+  margin: 4px 0 8px;
+  font-size: 0.95rem;
+}
+.cmp {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.cmp li {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: start;
+}
+.cmp-no {
+  width: 22px;
+  height: 22px;
+  margin-top: 2px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid var(--line-2);
+  border-radius: 50%;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.cmp-main {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.cmp-std {
+  color: var(--ok);
+  font-weight: 600;
+}
+.cmp-mark {
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.cmp li.same .cmp-mark {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+.cmp li.diff .cmp-mark {
+  background: var(--shu-soft);
+  color: var(--shu);
+}
+.cmp-all {
+  color: var(--ok);
+  font-weight: 700;
+}
