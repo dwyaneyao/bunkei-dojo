@@ -1,5 +1,5 @@
 import type { Item, Lesson, Point, ProduceItem } from './types'
-import { blankCount } from './lib/answer'
+import { blankCount, modelFills } from './lib/answer'
 
 // Every exam-review/content/*.json file is a lesson. Adding a lesson = adding a file.
 const files = import.meta.glob<Lesson>('../../content/*.json', { eager: true, import: 'default' })
@@ -47,7 +47,11 @@ export const PROBLEMS: string[] = (() => {
       if (i.type === 'produce') {
         const n = blankCount(i.prompt)
         if (n < 1) out.push(`${i.id}：完成句缺少＿＿`)
-        for (const m of i.models) if (!m.includes('**')) out.push(`${i.id}：参考答案须用 ** 标出填空部分`)
+        if (!i.zh?.trim()) out.push(`${i.id}：完成句缺少中文题意（zh）`)
+        if (!i.models.length) out.push(`${i.id}：完成句缺少标准答案`)
+        for (const m of i.models)
+          if (!m.includes('**')) out.push(`${i.id}：标准答案须用 ** 标出填空部分`)
+          else if (modelFills(m).length !== n) out.push(`${i.id}：标准答案的填空数与题目的＿＿数不一致`)
       }
       if (i.type === 'form' && i.answers.length === 0) out.push(`${i.id}：缺少答案`)
     }

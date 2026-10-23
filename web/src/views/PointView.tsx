@@ -58,7 +58,7 @@ export default function PointView({ id }: { id: string }) {
             {items.map((it) => {
               const card = p.cards[it.id]
               const last = [...p.log].reverse().find((a) => a.item === it.id)
-              const text = it.type === 'form' ? it.cue : it.prompt
+              const text = it.type === 'form' ? it.cue : it.type === 'produce' ? it.zh : it.prompt
               return (
                 <li key={it.id}>
                   <span className="item-kind">{KIND[it.type]}</span>

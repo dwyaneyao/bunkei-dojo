@@ -74,10 +74,14 @@ export interface ChoiceItem extends ItemBase {
   options: ChoiceOption[]
 }
 
-/** Exam-style open completion: write, then check against the list and models, then self-grade. */
+/** Exam-style completion with a set target: `zh` says in Chinese exactly what sentence to write; the learner
+ *  fills the blanks, compares with the standard answer (models[0]; any further models are equally right
+ *  wordings) and the check list, then self-grades. */
 export interface ProduceItem extends ItemBase {
   type: 'produce'
   prompt: string
+  /** The whole target sentence in Chinese. */
+  zh: string
   hint: string
   checks: string[]
   models: string[]

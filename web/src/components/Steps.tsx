@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { ChoiceItem, ErrorTag, FormItem, ProduceItem } from '../types'
 import { TAG_HINT, TAG_LABEL } from '../types'
 import { J } from '../lib/markup'
-import { checkForm, compose } from '../lib/answer'
+import { checkForm, compose, modelFills } from '../lib/answer'
 import { getProgress, overrule as overruleAttempt, record, type Mode } from '../lib/store'
 import type { Grade, MemoryState } from '../lib/fsrs'
 import { isEnter, shuffle } from '../lib/util'
@@ -293,7 +293,7 @@ export function ChoiceStep({ item, mode, onDone }: { item: ChoiceItem; mode: Mod
   )
 }
 
-// ---------- 完成句：exam-style open completion ----------
+// ---------- 完成句：write the sentence the Chinese asks for ----------
 
 export function ProduceStep({ item, mode, onDone }: { item: ProduceItem; mode: Mode; onDone: (r: StepResult) => void }) {
   const [vals, setVals] = useState<string[]>([])
@@ -304,7 +304,8 @@ export function ProduceStep({ item, mode, onDone }: { item: ProduceItem; mode: M
     <div className="step">
       <div className="step-card">
         <Kind icon="exam" label="完成句" point={item.point} />
-        <p className="step-ask">在空格处填写内容，完成句子。与考试相同，答案不唯一。</p>
+        <p className="step-ask">按中文意思，在空格处填写日语，完成句子。</p>
+        <p className="zh-line">{item.zh}</p>
         <Blanks prompt={item.prompt} values={vals} onChange={setVals} onEnter={() => setShown(true)} disabled={shown} autoFocus />
         {!shown && (
           <div className="actions">
@@ -362,7 +363,8 @@ const GRADES: { g: Grade; label: string; sub: string; cls: string }[] = [
   { g: 4, label: '◎ 熟练', sub: '迅速、准确地写出', cls: 'g4' },
 ]
 
-/** Self-check: learner's sentence, the item's checklist, model answers, then grade + error tags. */
+/** Self-check: learner's sentence, the standard answer and a blank-by-blank comparison, the checklist,
+ *  then grade + error tags. */
 export function Reveal({
   item,
   fills,
@@ -383,6 +385,10 @@ export function Reveal({
   const [tags, setTags] = useState<ErrorTag[]>([])
   const empty = fills.every((f) => !f?.trim())
   const grades = GRADES
+  // A blank matches when it equals that blank of any model answer (kana or kanji, spacing and punctuation aside).
+  const modelBlanks = item.models.map(modelFills)
+  const same = (modelBlanks[0] ?? []).map((_, i) => checkForm(fills[i] ?? '', modelBlanks.map((b) => b[i]).filter(Boolean)))
+  const allSame = same.length > 0 && same.every(Boolean)
 
   // Grade once only, even if a key repeats or a button is double-clicked.
   const fired = useRef(false)
@@ -418,6 +424,54 @@ export function Reveal({
       </div>
 
       <div className="panel">
+        <div className="lbl">标准答案</div>
+        <Sentence text={item.models[0]} />
+        {item.models.length > 1 && (
+          <>
+            <div className="lbl" style={{ marginTop: 10 }}>
+              也可以
+            </div>
+            <ul className="models">
+              {item.models.slice(1).map((m, i) => (
+                <li key={i}>
+                  <Sentence text={m} />
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
+
+      <div className="panel">
+        <div className="lbl">逐空对照</div>
+        {allSame ? (
+          <p className="cmp-all">◯ 每个空都与标准答案一致</p>
+        ) : (
+          <>
+            <ul className="cmp">
+              {modelBlanks[0].map((std, i) => (
+                <li key={i} className={same[i] ? 'same' : 'diff'}>
+                  <span className="cmp-no">{i + 1}</span>
+                  <span className="cmp-main">
+                    <span lang="ja">{fills[i]?.trim() || '（未作答）'}</span>
+                    {!same[i] && (
+                      <span className="cmp-std">
+                        标准：<J>{std}</J>
+                      </span>
+                    )}
+                  </span>
+                  <span className="cmp-mark">{same[i] ? '一致' : '不同'}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="muted small" style={{ marginTop: 8 }}>
+              与标准答案写法不同不一定是错误，请对照下面的检查要点判断。
+            </p>
+          </>
+        )}
+      </div>
+
+      <div className="panel">
         <div className="lbl">检查要点</div>
         <ul className="checks">
           {item.checks.map((c, i) => (
@@ -441,16 +495,6 @@ export function Reveal({
         </ul>
       </div>
 
-      <div className="panel">
-        <div className="lbl">参考答案</div>
-        <ul className="models">
-          {item.models.map((m, i) => (
-            <li key={i}>
-              <Sentence text={m} />
-            </li>
-          ))}
-        </ul>
-      </div>
       <CardPeek point={item.point} />
 
       {graded === undefined ? (

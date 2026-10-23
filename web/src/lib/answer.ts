@@ -47,6 +47,9 @@ export function checkForm(input: string, answers: string[]): boolean {
   return answers.some((a) => spellings(a).some((s) => norm(s) === got))
 }
 
+/** The filled-in parts of a model answer (its **bold** segments), one per blank. */
+export const modelFills = (model: string) => [...model.matchAll(/\*\*(.+?)\*\*/g)].map((m) => m[1])
+
 /** Split a prompt on its blanks. "A＿＿B＿＿C" → ["A", "B", "C"]. */
 export function splitBlanks(prompt: string): string[] {
   return prompt.split(/＿{2,}/)

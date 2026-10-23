@@ -90,7 +90,7 @@ export default function Exam() {
         <header className="page-head">
           <div className="eyebrow">模擬試験</div>
           <h1 className="page-title">模拟考</h1>
-          <p className="page-sub">模拟真实考试：先完成整张试卷，再逐题核对答案并自评。每个文型抽取一道你近期较少练习的完成句，薄弱文型优先出题。</p>
+          <p className="page-sub">模拟真实考试：先完成整张试卷，再逐题对照标准答案自评。每题给出中文意思，按意思用日语填空。每个文型抽取一道你近期较少练习的完成句，薄弱文型优先出题。</p>
         </header>
 
         <section className="card">
@@ -101,7 +101,7 @@ export default function Exam() {
                 本次共 {n} 题
               </div>
               <p className="muted small" style={{ marginTop: 6 }}>
-                题型：<span lang="ja">＿＿に書いて文を完成させてください。</span>
+                题型：按中文意思填空，完成句子（<span lang="ja">＿＿に書いて文を完成させてください。</span>）
               </p>
             </div>
             <button
@@ -205,6 +205,7 @@ export default function Exam() {
                 <li style={{ animationDelay: `${Math.min(k, 8) * 0.04}s` }}>
                   <span className="paper-no">{k + 1}</span>
                   <div className="paper-item">
+                    <p className="zh-line">{it.zh}</p>
                     <Blanks prompt={it.prompt} values={answers[it.id] ?? []} onChange={(v) => setAnswers({ ...answers, [it.id]: v })} />
                   </div>
                 </li>
@@ -254,6 +255,9 @@ export default function Exam() {
                   <span className="point-tag">
                     <J furigana={false}>{pointById.get(it.point)!.pattern}</J>
                   </span>
+                  <p className="zh-line" style={{ marginTop: 12 }}>
+                    {it.zh}
+                  </p>
                   <Reveal
                     item={it}
                     fills={answers[it.id] ?? []}

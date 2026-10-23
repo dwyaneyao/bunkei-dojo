@@ -5,7 +5,7 @@ const HOW: { icon: IconName; title: string; text: string }[] = [
   { icon: 'book', title: '文型讲解', text: '包括意思、接续、用法、答题常用搭配（一时想不出内容时可直接套用）和常见错误。' },
   { icon: 'pen', title: '接续', text: '根据「词语＋文型」写出完整的接续形式，由系统自动判定。汉字和假名写法均可识别；若判定有误，可点击「我的答案也正确」。' },
   { icon: 'eye', title: '辨析', text: '从几个选项中选出最恰当的一项。错误选项均取自常见错误，并逐一说明错误原因。' },
-  { icon: 'exam', title: '完成句', text: '与考试相同的开放式题目。先独立作答，再对照检查要点和参考答案进行自评。' },
+  { icon: 'exam', title: '完成句', text: '按中文意思用日语填空，写出完整的句子。作答后逐空对照标准答案和检查要点，再进行自评。' },
   { icon: 'clock', title: '模拟考', text: '完成整张试卷后统一核对答案，熟悉考场节奏。' },
 ]
 
@@ -103,7 +103,7 @@ export default function Guide() {
             掌握程度
           </h2>
           <p className="muted small" style={{ marginTop: 6 }}>
-            仅依据完成句（最接近考试的题型）判定。使用了提示，或当天看过参考答案后重答同一句的，均不计入。
+            仅依据完成句（最接近考试的题型）判定。使用了提示，或当天看过标准答案后重答同一句的，均不计入。
           </p>
           <div className="ladder">
             {LEVELS.map((name, n) => (
