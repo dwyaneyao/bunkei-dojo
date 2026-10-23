@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { itemById, itemsOf, pointById } from '../content'
+import { itemById, itemsOf, pointById, scopeOf } from '../content'
 import { buildDaily, buildDrill, type Step } from '../lib/plan'
 import { dayKey, getProgress, markIntro, useProgress, type Mode } from '../lib/store'
 import { useFocusMode } from '../lib/focus'
@@ -14,13 +14,68 @@ interface Tally {
   missed: string[]
 }
 
+// A session in progress is kept in localStorage (like a mock exam), so a reload, or leaving and coming back the
+// same day, carries on where it stopped instead of starting over.
+const SAVE_KEY = 'bunkei-dojo.sessions'
+
+interface Saved {
+  steps: Step[]
+  i: number
+  /** When step i became current: an answer to it recorded after this was given just before leaving. */
+  at: number
+  tally: Tally
+  retried: string[]
+}
+
+function readSaved(): Record<string, Saved> {
+  try {
+    return JSON.parse(localStorage.getItem(SAVE_KEY) ?? '{}') ?? {}
+  } catch {
+    return {}
+  }
+}
+
+/** Store (or with null, drop) one session; sessions from earlier days are dropped on the way. */
+function writeSaved(key: string, s: Saved | null) {
+  const today = dayKey(Date.now())
+  const all = Object.fromEntries(Object.entries(readSaved()).filter(([k, v]) => k !== key && dayKey(v.at) === today))
+  if (s) all[key] = s
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(all))
+  } catch {
+    /* storage blocked: the session still works, it just is not kept across reloads */
+  }
+}
+
+/** Today's unfinished session for this key, if its items still exist. */
+function resume(key: string): Saved | null {
+  const s = readSaved()[key]
+  if (!s || dayKey(s.at) !== dayKey(Date.now()) || s.i >= s.steps.length) return null
+  if (!s.steps.every((st) => (st.kind === 'learn' ? pointById.has(st.point) : itemById.has(st.item)))) return null
+  // The current item was answered but「继续」not pressed before the reload: count it and move on.
+  const cur = s.steps[s.i]
+  const a = cur.kind === 'item' ? getProgress().log.find((x) => x.item === cur.item && x.t >= s.at) : undefined
+  if (!a) return s
+  const tally = { ok: s.tally.ok + (a.ok ? 1 : 0), bad: s.tally.bad + (a.ok ? 0 : 1), missed: a.ok ? s.tally.missed : [...s.tally.missed, a.point] }
+  return { ...s, i: s.i + 1, at: Date.now(), tally }
+}
+
 export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; point?: string }) {
   const p = useProgress()
+  const key = mode === 'drill' && point ? `drill:${point}` : `daily:${scopeOf(p.settings.lesson)}`
+  const [saved] = useState(() => resume(key))
   // The queue is fixed when the session starts; retries are spliced in as we go.
-  const [steps, setSteps] = useState<Step[]>(() => (mode === 'drill' && point ? buildDrill(point) : buildDaily(p).steps))
-  const [i, setI] = useState(0)
-  const [tally, setTally] = useState<Tally>({ ok: 0, bad: 0, missed: [] })
-  const [retried] = useState(() => new Set<string>())
+  const [steps, setSteps] = useState<Step[]>(
+    () => saved?.steps ?? (mode === 'drill' && point ? buildDrill(point) : buildDaily(p).steps),
+  )
+  const [i, setI] = useState(saved?.i ?? 0)
+  const [tally, setTally] = useState<Tally>(saved?.tally ?? { ok: 0, bad: 0, missed: [] })
+  const [retried] = useState(() => new Set<string>(saved?.retried))
+
+  // Keep the place after every step; a finished session is dropped, so the next one starts fresh.
+  useEffect(() => {
+    writeSaved(key, i < steps.length ? { steps, i, at: Date.now(), tally, retried: [...retried] } : null)
+  }, [key, steps, i, tally, retried])
 
   const step = steps[i]
   const total = steps.length

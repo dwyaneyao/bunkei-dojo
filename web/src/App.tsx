@@ -163,7 +163,7 @@ export default function App() {
               <button className="link" onClick={() => location.reload()}>
                 刷新
               </button>
-              后使用（已作答的记录都已保存）。
+              后使用（练习和模拟考的进度都会保留）。
             </div>
           )}
           <SaveBanner />
