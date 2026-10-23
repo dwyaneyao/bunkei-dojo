@@ -17,6 +17,16 @@ export const lessonOfPoint = new Map(LESSONS.flatMap((l) => l.points.map((p) => 
 
 export const itemsOf = (pointId: string) => ITEMS.filter((i) => i.point === pointId)
 
+/** The lesson choice in effect: a lesson id or 'all'. Unset, or a lesson that no longer exists, means the
+ *  newest lesson, so a newly added lesson is picked up without touching the settings. */
+export function scopeOf(choice: string): string {
+  if (choice === 'all' || LESSONS.some((l) => l.id === choice)) return choice
+  return LESSONS[LESSONS.length - 1]?.id ?? 'all'
+}
+
+export const lessonsIn = (scope: string) => (scope === 'all' ? LESSONS : LESSONS.filter((l) => l.id === scope))
+export const pointsIn = (scope: string) => lessonsIn(scope).flatMap((l) => l.points)
+
 /** Content problems, shown on the home screen so a bad edit is noticed immediately. */
 export const PROBLEMS: string[] = (() => {
   const out: string[] = []

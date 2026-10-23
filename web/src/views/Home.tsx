@@ -1,11 +1,12 @@
-import { LESSONS, PROBLEMS, pointById } from '../content'
+import { PROBLEMS, lessonsIn, pointById, scopeOf } from '../content'
 import { buildDaily, errorStats, LEVEL_HINT, LEVELS, mastery, streak } from '../lib/plan'
-import { dayKey, useProgress } from '../lib/store'
+import { dayKey, setSettings, useProgress } from '../lib/store'
 import { useCloud } from '../lib/cloud'
 import { J } from '../lib/markup'
 import { TAG_HINT, TAG_LABEL } from '../types'
 import { daysUntil } from '../lib/util'
 import { CountUp, Icon, Ring } from '../components/ui'
+import LessonPicker from '../components/LessonPicker'
 
 const WEEK = ['日', '一', '二', '三', '四', '五', '六']
 
@@ -20,15 +21,20 @@ export default function Home() {
   const p = useProgress()
   const cloud = useCloud()
   const now = new Date()
-  const plan = buildDaily(p)
-  const stats = errorStats(p)
+  // Everything below follows the chosen lesson; streak and today's answers count all lessons.
+  const scope = scopeOf(p.settings.lesson)
+  const lessons = lessonsIn(scope)
+  const allPoints = lessons.flatMap((l) => l.points)
+  const plan = buildDaily(p, scope)
+  // Reviews waiting in the other lessons, so they are not forgotten while one lesson is chosen.
+  const elsewhere = scope === 'all' ? 0 : buildDaily(p, 'all').reviews - plan.reviews
+  const stats = errorStats(p, new Set(allPoints.map((pt) => pt.id)))
   const left = daysUntil(p.settings.examDate)
   const s = streak(p)
   const remaining = plan.steps.length
   const todayLog = p.log.filter((a) => dayKey(a.t) === dayKey(Date.now()))
   const done = todayLog.length
   const acc = done ? Math.round((todayLog.filter((a) => a.ok).length / done) * 100) : null
-  const allPoints = LESSONS.flatMap((l) => l.points)
   const solid = allPoints.filter((pt) => mastery(p, pt.id).level >= 3).length
   const firstName = (cloud.name ?? '').split(/\s+/)[0]
 
@@ -55,11 +61,14 @@ export default function Home() {
             {firstName && `、${firstName}`}
           </h1>
         </div>
+        <LessonPicker value={scope} onChange={(v) => setSettings({ lesson: v })} />
       </header>
 
       <section className="hero">
         <div className="hero-main">
-          <div className="eyebrow">今日の稽古</div>
+          <div className="eyebrow">
+            今日の稽古{scope !== 'all' && ` · ${lessons[0].title}`}
+          </div>
           {remaining > 0 ? (
             <>
               <h2>{done > 0 ? '继续今日练习' : '开始今日练习'}</h2>
@@ -100,6 +109,14 @@ export default function Home() {
                 </a>
               </div>
             </>
+          )}
+          {elsewhere > 0 && (
+            <p className="hero-note">
+              其他课还有 {elsewhere} 题待复习 ·{' '}
+              <button className="link" onClick={() => setSettings({ lesson: 'all' })}>
+                切换到「全部」
+              </button>
+            </p>
           )}
         </div>
         <Ring value={done + remaining ? done / (done + remaining) : 1} size={132} stroke={11} tone="light">
@@ -164,7 +181,7 @@ export default function Home() {
         </a>
       </section>
 
-      {LESSONS.map((l) => {
+      {lessons.map((l) => {
         const levels = l.points.map((pt) => mastery(p, pt.id))
         const counts = [0, 1, 2, 3, 4].map((n) => levels.filter((m) => m.level === n).length)
         return (

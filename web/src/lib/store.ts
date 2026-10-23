@@ -33,6 +33,8 @@ export interface Settings {
   furigana: boolean
   retention: number
   theme: 'auto' | 'light' | 'dark'
+  /** Lesson being studied (a lesson id, or 'all'); '' follows the newest lesson. See scopeOf in content.ts. */
+  lesson: string
 }
 
 export interface Progress {
@@ -49,7 +51,7 @@ export interface Progress {
 const fresh = (): Progress => ({
   version: 1,
   created: Date.now(),
-  settings: { examDate: '', newPerDay: 4, furigana: true, retention: 0.9, theme: 'auto' },
+  settings: { examDate: '', newPerDay: 4, furigana: true, retention: 0.9, theme: 'auto', lesson: '' },
   cards: {},
   intro: {},
   log: [],

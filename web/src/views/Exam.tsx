@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { LESSONS, itemById, itemsOf, pointById } from '../content'
+import { Fragment, useEffect, useState } from 'react'
+import { LESSONS, itemById, itemsOf, lessonOfPoint, lessonsIn, pointById, pointsIn, scopeOf } from '../content'
 import { buildExam } from '../lib/plan'
 import { record, useProgress } from '../lib/store'
 import { useFocusMode } from '../lib/focus'
@@ -10,6 +10,7 @@ import { J } from '../lib/markup'
 import Blanks from '../components/Blanks'
 import { Reveal } from '../components/Steps'
 import { CountUp, Icon, Ring, Stepper, Switch } from '../components/ui'
+import LessonPicker from '../components/LessonPicker'
 
 type Phase = 'setup' | 'paper' | 'check' | 'done'
 
@@ -45,13 +46,15 @@ export default function Exam() {
   const p = useProgress()
   const [draft] = useState(loadDraft)
   const [phase, setPhase] = useState<Phase>(draft?.phase ?? 'setup')
-  const [lessons, setLessons] = useState<string[]>(LESSONS.map((l) => l.id))
-  const pointsIn = LESSONS.filter((l) => lessons.includes(l.id)).flatMap((l) => l.points.map((pt) => pt.id))
-  const withProduce = pointsIn.filter((id) => itemsOf(id).some((i) => i.type === 'produce'))
+  // Starts from the lesson chosen on the home page; changing it here only affects this exam.
+  const [scope, setScope] = useState(() => scopeOf(p.settings.lesson))
+  const inScope = pointsIn(scope).map((pt) => pt.id)
+  const withProduce = inScope.filter((id) => itemsOf(id).some((i) => i.type === 'produce'))
   const studied = withProduce.filter((id) => p.intro[id]).length
   const [onlyStudied, setOnlyStudied] = useState(false)
   const max = onlyStudied ? studied : withProduce.length
-  const [count, setCount] = useState(withProduce.length)
+  // null: as many as the range allows (one per point).
+  const [count, setCount] = useState<number | null>(null)
   const [items, setItems] = useState<string[]>(draft?.items ?? [])
   const [answers, setAnswers] = useState<Record<string, string[]>>(draft?.answers ?? {})
   const [grades, setGrades] = useState<Record<string, Grade>>(draft?.grades ?? {})
@@ -79,7 +82,7 @@ export default function Exam() {
     return () => clearInterval(t)
   }, [phase])
 
-  const n = Math.min(count, max)
+  const n = Math.min(count ?? max, max)
 
   if (phase === 'setup')
     return (
@@ -105,7 +108,7 @@ export default function Exam() {
               className="btn primary big"
               disabled={max === 0}
               onClick={() => {
-                setItems(buildExam(p, pointsIn, { lessons, count: n, onlyStudied }))
+                setItems(buildExam(p, inScope, { lessons: lessonsIn(scope).map((l) => l.id), count: n, onlyStudied }))
                 setAnswers({})
                 setGrades({})
                 setStart(Date.now())
@@ -118,27 +121,21 @@ export default function Exam() {
           </div>
 
           <div className="option-rows">
-            <div className="opt-row">
-              <div className="opt-row-l">
-                <b>范围</b>
-                <span>选择考查的课次</span>
+            {LESSONS.length > 1 && (
+              <div className="opt-row">
+                <div className="opt-row-l">
+                  <b>范围</b>
+                  <span>选择考查的课次</span>
+                </div>
+                <LessonPicker
+                  value={scope}
+                  onChange={(v) => {
+                    setScope(v)
+                    setCount(null)
+                  }}
+                />
               </div>
-              <div className="chips">
-                {LESSONS.map((l) => {
-                  const on = lessons.includes(l.id)
-                  return (
-                    <button
-                      key={l.id}
-                      className={'tag-btn' + (on ? ' on' : '')}
-                      style={on ? { background: 'var(--ai)', borderColor: 'var(--ai)' } : undefined}
-                      onClick={() => setLessons(on ? lessons.filter((x) => x !== l.id) : [...lessons, l.id])}
-                    >
-                      {l.title}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
+            )}
             <div className="opt-row">
               <div className="opt-row-l">
                 <b>题数</b>
@@ -159,6 +156,16 @@ export default function Exam() {
     )
 
   const list = items.map((id) => itemById.get(id) as ProduceItem)
+  // A sheet covering several lessons gets a heading where each lesson's questions begin.
+  const several = new Set(list.map((it) => lessonOfPoint.get(it.point))).size > 1
+  const section = (k: number) => {
+    const l = lessonOfPoint.get(list[k].point)
+    return several && l && (k === 0 || lessonOfPoint.get(list[k - 1].point) !== l) ? (
+      <li className="paper-sec" lang="ja">
+        {l.title}
+      </li>
+    ) : null
+  }
 
   if (phase === 'paper')
     return (
@@ -178,7 +185,7 @@ export default function Exam() {
           </span>
           <span className="timer">
             <Icon name="clock" size={16} />
-            {fmt(now - start)}
+            {fmt(Math.max(0, now - start))}
           </span>
         </div>
         <div className="paper">
@@ -193,12 +200,15 @@ export default function Exam() {
           </div>
           <ol className="paper-list">
             {list.map((it, k) => (
-              <li key={it.id} style={{ animationDelay: `${Math.min(k, 8) * 0.04}s` }}>
-                <span className="paper-no">{k + 1}</span>
-                <div className="paper-item">
-                  <Blanks prompt={it.prompt} values={answers[it.id] ?? []} onChange={(v) => setAnswers({ ...answers, [it.id]: v })} />
-                </div>
-              </li>
+              <Fragment key={it.id}>
+                {section(k)}
+                <li style={{ animationDelay: `${Math.min(k, 8) * 0.04}s` }}>
+                  <span className="paper-no">{k + 1}</span>
+                  <div className="paper-item">
+                    <Blanks prompt={it.prompt} values={answers[it.id] ?? []} onChange={(v) => setAnswers({ ...answers, [it.id]: v })} />
+                  </div>
+                </li>
+              </Fragment>
             ))}
           </ol>
           <div className="actions" style={{ justifyContent: 'center', marginTop: 26 }}>
@@ -236,34 +246,37 @@ export default function Exam() {
         </div>
         <ol className="paper-list">
           {list.map((it, k) => (
-            <li key={it.id} className={grades[it.id] ? 'graded' : ''}>
-              <span className="paper-no">{k + 1}</span>
-              <div className="paper-item card" style={{ padding: 20 }}>
-                <span className="point-tag">
-                  <J furigana={false}>{pointById.get(it.point)!.pattern}</J>
-                </span>
-                <Reveal
-                  item={it}
-                  fills={answers[it.id] ?? []}
-                  graded={grades[it.id]}
-                  onGraded={(g, tags) => {
-                    const fills = answers[it.id] ?? []
-                    record({
-                      item: it.id,
-                      point: it.point,
-                      type: 'produce',
-                      mode: 'exam',
-                      ok: g >= 3,
-                      grade: g,
-                      answer: fills,
-                      sentence: compose(it.prompt, fills),
-                      tags,
-                    })
-                    setGrades((prev) => ({ ...prev, [it.id]: g }))
-                  }}
-                />
-              </div>
-            </li>
+            <Fragment key={it.id}>
+              {section(k)}
+              <li className={grades[it.id] ? 'graded' : ''}>
+                <span className="paper-no">{k + 1}</span>
+                <div className="paper-item card" style={{ padding: 20 }}>
+                  <span className="point-tag">
+                    <J furigana={false}>{pointById.get(it.point)!.pattern}</J>
+                  </span>
+                  <Reveal
+                    item={it}
+                    fills={answers[it.id] ?? []}
+                    graded={grades[it.id]}
+                    onGraded={(g, tags) => {
+                      const fills = answers[it.id] ?? []
+                      record({
+                        item: it.id,
+                        point: it.point,
+                        type: 'produce',
+                        mode: 'exam',
+                        ok: g >= 3,
+                        grade: g,
+                        answer: fills,
+                        sentence: compose(it.prompt, fills),
+                        tags,
+                      })
+                      setGrades((prev) => ({ ...prev, [it.id]: g }))
+                    }}
+                  />
+                </div>
+              </li>
+            </Fragment>
           ))}
         </ol>
         <div className="actions" style={{ justifyContent: 'center' }}>

@@ -2753,3 +2753,29 @@ label.list-row:hover {
     bottom: calc(86px + env(safe-area-inset-bottom));
   }
 }
+
+/* ---------- Lesson choice ---------- */
+
+.hero-note {
+  position: relative;
+  z-index: 1;
+  margin-top: 14px;
+  font-size: 0.85rem;
+  color: rgba(246, 242, 234, 0.7);
+}
+.hero-note .link {
+  color: #f1b7a4;
+}
+.paper-list > li.paper-sec {
+  display: block;
+  padding: 26px 0 8px;
+  border-bottom: 2px solid var(--ink);
+  font-family: var(--font-mincho);
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  animation: none;
+}
+.paper-list > li.paper-sec:first-child {
+  padding-top: 8px;
+}
