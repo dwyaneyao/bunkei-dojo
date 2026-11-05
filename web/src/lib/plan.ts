@@ -1,4 +1,4 @@
-import { ITEMS, itemsOf, pointById, pointsIn, scopeOf } from '../content'
+import { ITEMS, itemById, itemsOf, pointById, pointsIn, scopeOf } from '../content'
 import type { ErrorTag, Item } from '../types'
 import { dayKey, type Attempt, type Progress } from './store'
 
@@ -103,6 +103,20 @@ export function buildDaily(p: Progress, scope = scopeOf(p.settings.lesson), now 
   steps.push(...interleave(deferred).map((item) => ({ kind: 'item' as const, item })))
 
   return { steps, reviews: old.length, newPoints }
+}
+
+/** The mistake book: items of the chosen lesson whose latest answer was wrong. Answering one right takes it out. */
+export function mistakeItems(p: Progress, scope = scopeOf(p.settings.lesson)): string[] {
+  const points = new Set(pointsIn(scope).map((pt) => pt.id))
+  const last = new Map<string, Attempt>()
+  for (const a of p.log) if (points.has(a.point) && itemById.has(a.item)) last.set(a.item, a)
+  return [...last.values()].filter((a) => !a.ok).map((a) => a.item)
+}
+
+/** A session over the mistake book: quick items first, exam-style ones last, points interleaved. */
+export function buildMistakes(p: Progress): Step[] {
+  const ids = mistakeItems(p).sort((a, b) => STAGE[itemType(a)] - STAGE[itemType(b)])
+  return interleave(ids).map((item) => ({ kind: 'item' as const, item }))
 }
 
 const itemType = (id: string) => ITEMS.find((i) => i.id === id)?.type ?? 'produce'

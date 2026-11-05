@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { itemById, itemsOf, pointById, scopeOf } from '../content'
-import { buildDaily, buildDrill, type Step } from '../lib/plan'
+import { buildDaily, buildDrill, buildMistakes, mistakeItems, type Step } from '../lib/plan'
 import { dayKey, getProgress, markIntro, useProgress, type Mode } from '../lib/store'
 import { useFocusMode } from '../lib/focus'
 import { J } from '../lib/markup'
@@ -62,11 +62,13 @@ function resume(key: string): Saved | null {
 
 export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; point?: string }) {
   const p = useProgress()
-  const key = mode === 'drill' && point ? `drill:${point}` : `daily:${scopeOf(p.settings.lesson)}`
+  const key = mode === 'drill' && point ? `drill:${point}` : `${mode}:${scopeOf(p.settings.lesson)}`
   const [saved] = useState(() => resume(key))
   // The queue is fixed when the session starts; retries are spliced in as we go.
   const [steps, setSteps] = useState<Step[]>(
-    () => saved?.steps ?? (mode === 'drill' && point ? buildDrill(point) : buildDaily(p).steps),
+    () =>
+      saved?.steps ??
+      (mode === 'drill' && point ? buildDrill(point) : mode === 'mistakes' ? buildMistakes(p) : buildDaily(p).steps),
   )
   const [i, setI] = useState(saved?.i ?? 0)
   const [tally, setTally] = useState<Tally>(saved?.tally ?? { ok: 0, bad: 0, missed: [] })
@@ -86,6 +88,20 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
   }, [i])
 
   const exitHref = mode === 'drill' && point ? `#/point/${point}` : '#/'
+
+  if (total === 0 && mode === 'mistakes')
+    return (
+      <div className="card finish">
+        <Stamp kind="ok" size={84} />
+        <h1>没有待练的错题</h1>
+        <p className="muted">所选课程中，最近一次答错的题都已经重新答对了。</p>
+        <div className="actions" style={{ justifyContent: 'center' }}>
+          <a className="btn primary big" href="#/">
+            返回今日
+          </a>
+        </div>
+      </div>
+    )
 
   if (total === 0)
     return (
@@ -147,6 +163,11 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
           <a className="btn primary big" href="#/">
             返回今日
           </a>
+          {mode !== 'mistakes' && mistakeItems(p).length > 0 && (
+            <a className="btn big" href="#/session/mistakes">
+              练习错题（{mistakeItems(p).length}）
+            </a>
+          )}
           {mode === 'drill' && point && (
             <a className="btn big" href={`#/point/${point}`}>
               返回文型详情

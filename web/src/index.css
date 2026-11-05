@@ -1617,7 +1617,9 @@ a.stat:hover {
   font-family: var(--font-ja);
 }
 .quote p + p {
-  margin-top: 4px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--line-2);
 }
 .formula {
   list-style: none;
@@ -2847,4 +2849,42 @@ label.list-row:hover {
 .cmp-all {
   color: var(--ok);
   font-weight: 700;
+}
+
+/* ---------- Lesson picker, compact stats ---------- */
+
+.lesson-picker {
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.lesson-picker .segmented {
+  min-width: calc(var(--n) * 70px + 8px);
+}
+.toolbar .lesson-picker {
+  width: 100%;
+}
+@media (max-width: 760px) {
+  .greet .lesson-picker {
+    width: 100%;
+  }
+  .stats {
+    gap: 10px;
+    margin: 14px 0;
+  }
+  .stat {
+    padding: 14px 16px;
+    gap: 2px;
+  }
+  .stat-ico {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 30px;
+    height: 30px;
+  }
+  .stat-n {
+    font-size: 1.5rem;
+    margin-top: 0;
+  }
 }
