@@ -32,11 +32,11 @@ export default function PointCard({ point, head = true, aside }: { point: Point;
                   <J>{point.list.form}</J>
                 </p>
               )}
-              {point.list.example && (
-                <p>
-                  <J>{point.list.example}</J>
+              {[point.list.example ?? []].flat().map((ex, i) => (
+                <p key={i}>
+                  <J>{ex}</J>
                 </p>
-              )}
+              ))}
             </div>
           </section>
         )}
