@@ -2281,106 +2281,6 @@ a.stat:hover {
   font-size: 0.85rem;
   color: var(--ink-3);
 }
-.paper {
-  position: relative;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 36px 40px;
-  box-shadow: var(--shadow-2);
-}
-.paper-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 16px;
-  padding-bottom: 16px;
-  margin-bottom: 8px;
-  border-bottom: 3px double var(--ink);
-}
-.paper-head h1 {
-  font-family: var(--font-mincho);
-  font-size: 1.9rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-}
-.paper-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.paper-list > li {
-  display: flex;
-  gap: 16px;
-  padding: 18px 0;
-  border-bottom: 1px solid var(--line);
-  animation: rise 0.5s var(--ease) backwards;
-}
-.paper-no {
-  flex: none;
-  width: 32px;
-  height: 32px;
-  display: grid;
-  place-items: center;
-  border: 1.5px solid var(--ink);
-  border-radius: 50%;
-  font-family: var(--font-serif);
-  font-weight: 700;
-  margin-top: 10px;
-}
-.paper-list > li.graded {
-  opacity: 0.72;
-}
-.paper-item {
-  flex: 1;
-  min-width: 0;
-}
-.timer {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  border-radius: 999px;
-  background: var(--ink);
-  color: var(--surface);
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
-}
-.exam-bar {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 0;
-  background: linear-gradient(var(--bg) 75%, transparent);
-}
-.exam-bar .grow {
-  flex: 1;
-  font-weight: 700;
-}
-.result {
-  text-align: center;
-  padding: 36px 24px;
-}
-.result .ring {
-  margin: 8px auto 18px;
-}
-.result-score {
-  font-family: var(--font-serif);
-  font-size: 2.6rem;
-  font-weight: 900;
-}
-@media (max-width: 640px) {
-  .paper {
-    padding: 22px 16px;
-  }
-  .exam-hero {
-    grid-template-columns: 1fr;
-  }
-}
-
 /* ---------- Me / settings ---------- */
 
 .profile {
@@ -2768,19 +2668,6 @@ label.list-row:hover {
 .hero-note .link {
   color: #f1b7a4;
 }
-.paper-list > li.paper-sec {
-  display: block;
-  padding: 26px 0 8px;
-  border-bottom: 2px solid var(--ink);
-  font-family: var(--font-mincho);
-  font-size: 1.1rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  animation: none;
-}
-.paper-list > li.paper-sec:first-child {
-  padding-top: 8px;
-}
 
 /* ---------- Guided completion ---------- */
 
@@ -2792,10 +2679,6 @@ label.list-row:hover {
   background: var(--ai-soft);
   color: var(--ink);
   line-height: 1.7;
-}
-.paper-item .zh-line {
-  margin: 4px 0 8px;
-  font-size: 0.95rem;
 }
 .cmp {
   list-style: none;

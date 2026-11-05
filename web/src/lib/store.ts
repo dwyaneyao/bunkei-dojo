@@ -6,7 +6,8 @@ import type { ErrorTag } from '../types'
 // Progress is saved to exam-review/userdata/progress.json (via the dev server) and mirrored in localStorage.
 // Copies are always merged, never replaced (see merge.ts), so two tabs or a fresh browser cannot wipe answers.
 
-export type Mode = 'daily' | 'exam' | 'drill' | 'mistakes'
+/** 'exam' is the former mock exam, kept for old records. */
+export type Mode = 'daily' | 'exam' | 'drill' | 'mistakes' | 'quiz'
 
 export interface Attempt {
   id: string
