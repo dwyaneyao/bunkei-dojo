@@ -79,7 +79,7 @@ export default function App() {
   let view
   switch (head) {
     case 'session':
-      view = <Session key={location.hash} mode={arg === 'drill' ? 'drill' : 'daily'} point={route[2]} />
+      view = <Session key={location.hash} mode={arg === 'drill' || arg === 'mistakes' ? arg : 'daily'} point={route[2]} />
       break
     case 'exam':
       view = <Exam />

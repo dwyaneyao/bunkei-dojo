@@ -1,5 +1,5 @@
 import { PROBLEMS, lessonsIn, pointById, scopeOf } from '../content'
-import { buildDaily, errorStats, LEVEL_HINT, LEVELS, mastery, streak } from '../lib/plan'
+import { buildDaily, errorStats, LEVEL_HINT, LEVELS, mastery, mistakeItems, streak } from '../lib/plan'
 import { dayKey, setSettings, useProgress } from '../lib/store'
 import { useCloud } from '../lib/cloud'
 import { J } from '../lib/markup'
@@ -29,6 +29,8 @@ export default function Home() {
   // Reviews waiting in the other lessons, so they are not forgotten while one lesson is chosen.
   const elsewhere = scope === 'all' ? 0 : buildDaily(p, 'all').reviews - plan.reviews
   const stats = errorStats(p, new Set(allPoints.map((pt) => pt.id)))
+  // Items whose latest answer was wrong: the quickest win in a short review.
+  const mistakes = mistakeItems(p, scope).length
   const left = daysUntil(p.settings.examDate)
   const s = streak(p)
   const remaining = plan.steps.length
@@ -181,6 +183,57 @@ export default function Home() {
         </a>
       </section>
 
+      <section className="two-col">
+        <div className="card">
+          <div className="card-head">
+            <h2 className="card-title">
+              <Icon name="target" />
+              待加强文型
+            </h2>
+            {mistakes > 0 && (
+              <a className="btn primary small" href="#/session/mistakes">
+                练习错题 · {mistakes}
+              </a>
+            )}
+          </div>
+          {stats.byPoint.length === 0 ? (
+            <p className="empty small">暂无。近 30 天答错过的文型会显示在这里。</p>
+          ) : (
+            <div className="chips">
+              {stats.byPoint.slice(0, 8).map(([id, n]) => (
+                <a key={id} className="chip" href={`#/point/${id}`}>
+                  <J furigana={false}>{pointById.get(id)!.pattern}</J>
+                  <span className="muted">×{n}</span>
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="card">
+          <div className="card-head">
+            <h2 className="card-title">
+              <Icon name="chart" />
+              近 30 天错误类型
+            </h2>
+          </div>
+          {stats.byTag.length === 0 ? (
+            <p className="empty small">暂无错题记录。完成句自评时标注错误类型后，这里会统计你最常出错的环节。</p>
+          ) : (
+            <div className="bars">
+              {stats.byTag.map(([t, n]) => (
+                <div key={t} className="bar-row" title={TAG_HINT[t]}>
+                  <span>{TAG_LABEL[t]}</span>
+                  <span className="bar">
+                    <i style={{ width: `${(n / stats.byTag[0][1]) * 100}%` }} />
+                  </span>
+                  <span className="bar-n">{n}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
       {lessons.map((l) => {
         const levels = l.points.map((pt) => mastery(p, pt.id))
         const counts = [0, 1, 2, 3, 4].map((n) => levels.filter((m) => m.level === n).length)
@@ -233,51 +286,6 @@ export default function Home() {
         )
       })}
 
-      <section className="two-col">
-        <div className="card">
-          <div className="card-head">
-            <h2 className="card-title">
-              <Icon name="chart" />
-              近 30 天错误类型
-            </h2>
-          </div>
-          {stats.byTag.length === 0 ? (
-            <p className="empty small">暂无错题记录。完成句自评时标注错误类型后，这里会统计你最常出错的环节。</p>
-          ) : (
-            <div className="bars">
-              {stats.byTag.map(([t, n]) => (
-                <div key={t} className="bar-row" title={TAG_HINT[t]}>
-                  <span>{TAG_LABEL[t]}</span>
-                  <span className="bar">
-                    <i style={{ width: `${(n / stats.byTag[0][1]) * 100}%` }} />
-                  </span>
-                  <span className="bar-n">{n}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-        <div className="card">
-          <div className="card-head">
-            <h2 className="card-title">
-              <Icon name="target" />
-              待加强文型
-            </h2>
-          </div>
-          {stats.byPoint.length === 0 ? (
-            <p className="empty small">暂无。答错过的文型会显示在这里。</p>
-          ) : (
-            <div className="chips">
-              {stats.byPoint.slice(0, 8).map(([id, n]) => (
-                <a key={id} className="chip" href={`#/point/${id}`}>
-                  <J furigana={false}>{pointById.get(id)!.pattern}</J>
-                  <span className="muted">×{n}</span>
-                </a>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
     </div>
   )
 }
