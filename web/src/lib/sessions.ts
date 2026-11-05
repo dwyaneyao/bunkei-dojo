@@ -4,7 +4,7 @@ import { dayKey, getProgress } from './store'
 
 // A practice session in progress is kept in localStorage, so a reload, or leaving and coming back, carries on
 // where it stopped instead of starting over. Daily practice, drills and the mistake book keep theirs for the
-// day; a lesson quiz (按课出题: 完成句 or 速测) is kept until it is finished or given up.
+// day; a test (测试: 常规测试 or 速测) is kept until it is finished or given up.
 
 const SAVE_KEY = 'bunkei-dojo.sessions'
 export const QUIZ_KEY = 'quiz'

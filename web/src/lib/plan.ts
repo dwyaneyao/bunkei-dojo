@@ -209,7 +209,7 @@ export function streak(p: Progress, now = Date.now()): number {
   return n
 }
 
-// ---------- Lesson quiz (按课出题) ----------
+// ---------- 常规测试 (one completion per point) ----------
 
 export interface QuizOptions {
   count: number

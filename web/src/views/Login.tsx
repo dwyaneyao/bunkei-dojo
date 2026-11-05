@@ -57,7 +57,7 @@ export default function Login() {
           </li>
           <li>
             <Icon name="exam" />
-            按课出题：每个文型一题，逐题对照答案
+            测试：常规测试与速测，逐题对照答案
           </li>
         </ul>
       </aside>

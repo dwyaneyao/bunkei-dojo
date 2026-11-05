@@ -103,11 +103,11 @@ export default function Home() {
           ) : (
             <>
               <h2>今日练习已完成</h2>
-              <p className="hero-line">到期的复习已全部完成，新文型也已达到今日上限。如需继续练习，可以按课出题。</p>
+              <p className="hero-line">到期的复习已全部完成，新文型也已达到今日上限。如需继续练习，可以做一次测试。</p>
               <div className="actions">
                 <a className="btn light big" href="#/quiz">
                   <Icon name="exam" size={18} />
-                  按课出题
+                  开始测试
                 </a>
               </div>
             </>

@@ -62,7 +62,7 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
         <p className="muted">选择一课，每个文型出一道题。</p>
         <div className="actions" style={{ justifyContent: 'center' }}>
           <a className="btn primary big" href="#/quiz">
-            按课出题
+            去测试
           </a>
         </div>
       </div>
@@ -87,10 +87,10 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
       <div className="card finish">
         <Stamp kind="ok" size={84} />
         <h1>今日暂无练习内容</h1>
-        <p className="muted">到期的复习已全部完成，新文型也已达到每日上限。你可以按课出题，或在「文型」页选择单个文型进行专项练习。</p>
+        <p className="muted">到期的复习已全部完成，新文型也已达到每日上限。你可以做一次测试，或在「文型」页选择单个文型进行专项练习。</p>
         <div className="actions" style={{ justifyContent: 'center' }}>
           <a className="btn primary big" href="#/quiz">
-            按课出题
+            去测试
           </a>
           <a className="btn big" href="#/points">
             浏览文型
@@ -144,7 +144,7 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
           </a>
           {set && (
             <a className="btn big" href="#/quiz">
-              {mode === 'speed' ? '再测一组' : '换一课再出题'}
+              再测一组
             </a>
           )}
           {mode !== 'mistakes' && mistakeItems(p).length > 0 && (
