@@ -32,8 +32,8 @@ export interface Point {
   group: string
   pattern: string
   kind: 'grammar' | 'word'
-  /** As printed on the class list (原文). */
-  list: { form?: string; example?: string }
+  /** As printed on the class list or textbook (原文); a textbook may give several examples. */
+  list: { form?: string; example?: string | string[] }
   meaning: string
   form: string[]
   rules: string[]
