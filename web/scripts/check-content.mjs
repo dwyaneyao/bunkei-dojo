@@ -95,7 +95,9 @@ for (const file of fs.readdirSync(DIR).filter((f) => /^l\d+\.json$/.test(f)).sor
       ja(`${i.id}.prompt`, i.prompt?.replace(/＿+/g, ''))
       if ((i.options ?? []).filter((o) => o.ok).length !== 1) at(i.id, 'needs exactly one ok option')
       for (const o of i.options ?? []) {
-        ja(`${i.id}.option`, o.text)
+        // A 含义理解 option is a Chinese translation: no kana in it, so only its markup is checked.
+        if (i.type === 'quick' && !KANA.test(o.text)) markup(`${i.id}.option`, o.text)
+        else ja(`${i.id}.option`, o.text)
         markup(`${i.id}.why`, o.why)
         if (!o.ok && !TAGS.has(o.tag)) at(i.id, `wrong option needs an error tag: ${o.text}`)
       }
