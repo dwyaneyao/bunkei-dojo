@@ -310,7 +310,7 @@ export function ProduceStep({ item, mode, onDone }: { item: ProduceItem; mode: M
         {!shown && (
           <div className="actions">
             <button className="btn primary big" onClick={() => setShown(true)}>
-              提交并核对答案 <kbd>Enter</kbd>
+              {vals.some((v) => v?.trim()) ? '提交并核对答案' : '直接看答案'} <kbd>Enter</kbd>
             </button>
             {!hinted ? (
               <button className="btn ghost" onClick={() => setHinted(true)}>

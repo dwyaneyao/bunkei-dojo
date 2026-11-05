@@ -57,7 +57,7 @@ export default function Login() {
           </li>
           <li>
             <Icon name="exam" />
-            模拟考：完成整张试卷后统一核对
+            按课出题：每个文型一题，逐题对照答案
           </li>
         </ul>
       </aside>

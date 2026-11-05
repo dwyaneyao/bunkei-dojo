@@ -8,7 +8,7 @@ import { daysUntil } from './lib/util'
 import { Avatar, Icon, Seal, type IconName } from './components/ui'
 import Home from './views/Home'
 import Session from './views/Session'
-import Exam from './views/Exam'
+import Quiz from './views/Quiz'
 import Points from './views/Points'
 import PointView from './views/PointView'
 import Me from './views/Me'
@@ -31,7 +31,7 @@ function useRoute() {
 const NAV: { href: string; label: string; icon: IconName; match: string[] }[] = [
   { href: '#/', label: '今日', icon: 'home', match: [''] },
   { href: '#/points', label: '文型', icon: 'book', match: ['points', 'point'] },
-  { href: '#/exam', label: '模拟考', icon: 'exam', match: ['exam'] },
+  { href: '#/quiz', label: '按课出题', icon: 'exam', match: ['quiz', 'exam'] },
   { href: '#/guide', label: '学习方法', icon: 'compass', match: ['guide'] },
 ]
 
@@ -57,7 +57,7 @@ export default function App() {
   const toast = useToast()
   const [head = '', arg] = route
   // A newer deploy reloads browsing pages at once; during practice, an exam or login it only offers a reload.
-  const update = useUpdate(!['session', 'exam', 'login'].includes(head))
+  const update = useUpdate(!['session', 'login'].includes(head))
 
   // Light / dark / follow the system.
   const theme = p.settings.theme ?? 'auto'
@@ -79,10 +79,11 @@ export default function App() {
   let view
   switch (head) {
     case 'session':
-      view = <Session key={location.hash} mode={arg === 'drill' || arg === 'mistakes' ? arg : 'daily'} point={route[2]} />
+      view = <Session key={location.hash} mode={arg === 'drill' || arg === 'mistakes' || arg === 'quiz' ? arg : 'daily'} point={route[2]} />
       break
-    case 'exam':
-      view = <Exam />
+    case 'quiz':
+    case 'exam': // the former mock exam
+      view = <Quiz />
       break
     case 'points':
       view = <Points />
@@ -163,7 +164,7 @@ export default function App() {
               <button className="link" onClick={() => location.reload()}>
                 刷新
               </button>
-              后使用（练习和模拟考的进度都会保留）。
+              后使用（练习进度都会保留）。
             </div>
           )}
           <SaveBanner />

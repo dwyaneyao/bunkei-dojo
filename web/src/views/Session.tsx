@@ -2,73 +2,30 @@ import { useEffect, useState } from 'react'
 import { itemById, itemsOf, pointById, scopeOf } from '../content'
 import { buildDaily, buildDrill, buildMistakes, mistakeItems, type Step } from '../lib/plan'
 import { dayKey, getProgress, markIntro, useProgress, type Mode } from '../lib/store'
+import { QUIZ_KEY, resume, writeSaved, type Tally } from '../lib/sessions'
 import { useFocusMode } from '../lib/focus'
 import { J } from '../lib/markup'
 import PointCard from '../components/PointCard'
 import { ChoiceStep, FormStep, ProduceStep, type StepResult } from '../components/Steps'
 import { CountUp, Icon, Stamp } from '../components/ui'
 
-interface Tally {
-  ok: number
-  bad: number
-  missed: string[]
-}
-
-// A session in progress is kept in localStorage (like a mock exam), so a reload, or leaving and coming back the
-// same day, carries on where it stopped instead of starting over.
-const SAVE_KEY = 'bunkei-dojo.sessions'
-
-interface Saved {
-  steps: Step[]
-  i: number
-  /** When step i became current: an answer to it recorded after this was given just before leaving. */
-  at: number
-  tally: Tally
-  retried: string[]
-}
-
-function readSaved(): Record<string, Saved> {
-  try {
-    return JSON.parse(localStorage.getItem(SAVE_KEY) ?? '{}') ?? {}
-  } catch {
-    return {}
-  }
-}
-
-/** Store (or with null, drop) one session; sessions from earlier days are dropped on the way. */
-function writeSaved(key: string, s: Saved | null) {
-  const today = dayKey(Date.now())
-  const all = Object.fromEntries(Object.entries(readSaved()).filter(([k, v]) => k !== key && dayKey(v.at) === today))
-  if (s) all[key] = s
-  try {
-    localStorage.setItem(SAVE_KEY, JSON.stringify(all))
-  } catch {
-    /* storage blocked: the session still works, it just is not kept across reloads */
-  }
-}
-
-/** Today's unfinished session for this key, if its items still exist. */
-function resume(key: string): Saved | null {
-  const s = readSaved()[key]
-  if (!s || dayKey(s.at) !== dayKey(Date.now()) || s.i >= s.steps.length) return null
-  if (!s.steps.every((st) => (st.kind === 'learn' ? pointById.has(st.point) : itemById.has(st.item)))) return null
-  // The current item was answered but「继续」not pressed before the reload: count it and move on.
-  const cur = s.steps[s.i]
-  const a = cur.kind === 'item' ? getProgress().log.find((x) => x.item === cur.item && x.t >= s.at) : undefined
-  if (!a) return s
-  const tally = { ok: s.tally.ok + (a.ok ? 1 : 0), bad: s.tally.bad + (a.ok ? 0 : 1), missed: a.ok ? s.tally.missed : [...s.tally.missed, a.point] }
-  return { ...s, i: s.i + 1, at: Date.now(), tally }
-}
-
 export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; point?: string }) {
   const p = useProgress()
-  const key = mode === 'drill' && point ? `drill:${point}` : `${mode}:${scopeOf(p.settings.lesson)}`
+  const key =
+    mode === 'quiz' ? QUIZ_KEY : mode === 'drill' && point ? `drill:${point}` : `${mode}:${scopeOf(p.settings.lesson)}`
   const [saved] = useState(() => resume(key))
-  // The queue is fixed when the session starts; retries are spliced in as we go.
+  // The queue is fixed when the session starts; retries are spliced in as we go. A lesson quiz is built on its
+  // setup page and only ever resumed here.
   const [steps, setSteps] = useState<Step[]>(
     () =>
       saved?.steps ??
-      (mode === 'drill' && point ? buildDrill(point) : mode === 'mistakes' ? buildMistakes(p) : buildDaily(p).steps),
+      (mode === 'quiz'
+        ? []
+        : mode === 'drill' && point
+          ? buildDrill(point)
+          : mode === 'mistakes'
+            ? buildMistakes(p)
+            : buildDaily(p).steps),
   )
   const [i, setI] = useState(saved?.i ?? 0)
   const [tally, setTally] = useState<Tally>(saved?.tally ?? { ok: 0, bad: 0, missed: [] })
@@ -76,8 +33,9 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
 
   // Keep the place after every step; a finished session is dropped, so the next one starts fresh.
   useEffect(() => {
-    writeSaved(key, i < steps.length ? { steps, i, at: Date.now(), tally, retried: [...retried] } : null)
-  }, [key, steps, i, tally, retried])
+    const label = saved?.label
+    writeSaved(key, i < steps.length ? { steps, i, at: Date.now(), tally, retried: [...retried], label } : null)
+  }, [key, steps, i, tally, retried, saved])
 
   const step = steps[i]
   const total = steps.length
@@ -87,7 +45,21 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
     window.scrollTo(0, 0)
   }, [i])
 
-  const exitHref = mode === 'drill' && point ? `#/point/${point}` : '#/'
+  const exitHref = mode === 'quiz' ? '#/quiz' : mode === 'drill' && point ? `#/point/${point}` : '#/'
+
+  if (total === 0 && mode === 'quiz')
+    return (
+      <div className="card finish">
+        <Stamp kind="ok" size={84} />
+        <h1>没有进行中的练习</h1>
+        <p className="muted">选择一课，每个文型出一道题。</p>
+        <div className="actions" style={{ justifyContent: 'center' }}>
+          <a className="btn primary big" href="#/quiz">
+            按课出题
+          </a>
+        </div>
+      </div>
+    )
 
   if (total === 0 && mode === 'mistakes')
     return (
@@ -108,10 +80,10 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
       <div className="card finish">
         <Stamp kind="ok" size={84} />
         <h1>今日暂无练习内容</h1>
-        <p className="muted">到期的复习已全部完成，新文型也已达到每日上限。你可以进行一次模拟考，或在「文型」页选择单个文型进行专项练习。</p>
+        <p className="muted">到期的复习已全部完成，新文型也已达到每日上限。你可以按课出题，或在「文型」页选择单个文型进行专项练习。</p>
         <div className="actions" style={{ justifyContent: 'center' }}>
-          <a className="btn primary big" href="#/exam">
-            开始模拟考
+          <a className="btn primary big" href="#/quiz">
+            按课出题
           </a>
           <a className="btn big" href="#/points">
             浏览文型
@@ -163,6 +135,11 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
           <a className="btn primary big" href="#/">
             返回今日
           </a>
+          {mode === 'quiz' && (
+            <a className="btn big" href="#/quiz">
+              换一课再出题
+            </a>
+          )}
           {mode !== 'mistakes' && mistakeItems(p).length > 0 && (
             <a className="btn big" href="#/session/mistakes">
               练习错题（{mistakeItems(p).length}）
@@ -181,7 +158,7 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
   const done = (r: StepResult, itemId: string) => {
     const it = itemById.get(itemId)!
     setTally((t) => ({ ok: t.ok + (r.ok ? 1 : 0), bad: t.bad + (r.ok ? 0 : 1), missed: r.ok ? t.missed : [...t.missed, it.point] }))
-    if (!r.ok) {
+    if (!r.ok && mode !== 'quiz') {
       const next = [...steps]
       const at = Math.min(next.length, i + 4)
       if (it.type !== 'produce' && !retried.has(itemId)) {

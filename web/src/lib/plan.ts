@@ -208,16 +208,15 @@ export function streak(p: Progress, now = Date.now()): number {
   return n
 }
 
-// ---------- Mock exam ----------
+// ---------- Lesson quiz (按课出题) ----------
 
-export interface ExamOptions {
-  lessons: string[]
+export interface QuizOptions {
   count: number
   onlyStudied: boolean
 }
 
 /** One exam-style item per point; weak and least-recently-practised points first, then list order. */
-export function buildExam(p: Progress, lessonPoints: string[], opts: ExamOptions): string[] {
+export function buildQuiz(p: Progress, lessonPoints: string[], opts: QuizOptions): string[] {
   const lastSeen = (item: string) => {
     for (let i = p.log.length - 1; i >= 0; i--) if (p.log[i].item === item) return p.log[i].t
     return 0
