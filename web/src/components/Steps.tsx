@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import type { ChoiceItem, ErrorTag, FormItem, ProduceItem } from '../types'
+import type { ChoiceItem, ErrorTag, FormItem, ProduceItem, QuickItem } from '../types'
 import { TAG_HINT, TAG_LABEL } from '../types'
 import { J } from '../lib/markup'
 import { checkForm, compose, modelFills } from '../lib/answer'
@@ -216,7 +216,7 @@ export function FormStep({ item, mode, onDone }: { item: FormItem; mode: Mode; o
 
 // ---------- 辨析：pick the natural completion ----------
 
-export function ChoiceStep({ item, mode, onDone }: { item: ChoiceItem; mode: Mode; onDone: (r: StepResult) => void }) {
+export function ChoiceStep({ item, mode, onDone }: { item: ChoiceItem | QuickItem; mode: Mode; onDone: (r: StepResult) => void }) {
   const opts = useMemo(() => shuffle(item.options.map((o, i) => ({ ...o, i }))), [item])
   const [pick, setPick] = useState<number | null>(null)
   const chosen = pick === null ? null : item.options[pick]
@@ -253,7 +253,7 @@ export function ChoiceStep({ item, mode, onDone }: { item: ChoiceItem; mode: Mod
   return (
     <div className="step">
       <div className="step-card">
-        <Kind icon="eye" label="辨析" point={item.point} />
+        <Kind icon="eye" label={item.type === 'quick' ? '速测' : '辨析'} point={item.point} />
         <p className="step-ask">{item.ask ?? '选出填入空格最恰当的一项'}</p>
         <Sentence text={item.prompt} />
         <ol className="options">
@@ -263,7 +263,7 @@ export function ChoiceStep({ item, mode, onDone }: { item: ChoiceItem; mode: Mod
               <li key={o.i}>
                 <button className={'option' + state} onClick={() => choose(o.i)} disabled={pick !== null}>
                   <span className="opt-n">{pick !== null && o.ok ? '◯' : pick === o.i ? '✕' : n + 1}</span>
-                  <span className="opt-text" lang="ja">
+                  <span className="opt-text" lang={/[\u3040-\u30ff]/.test(o.text) ? 'ja' : 'zh'}>
                     <J>{o.text}</J>
                   </span>
                   {pick !== null && o.tag && !o.ok && <span className="tag">{TAG_LABEL[o.tag]}</span>}

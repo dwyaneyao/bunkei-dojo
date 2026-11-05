@@ -7,7 +7,7 @@ import type { ErrorTag } from '../types'
 // Copies are always merged, never replaced (see merge.ts), so two tabs or a fresh browser cannot wipe answers.
 
 /** 'exam' is the former mock exam, kept for old records. */
-export type Mode = 'daily' | 'exam' | 'drill' | 'mistakes' | 'quiz'
+export type Mode = 'daily' | 'exam' | 'drill' | 'mistakes' | 'quiz' | 'speed'
 
 export interface Attempt {
   id: string

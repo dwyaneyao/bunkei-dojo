@@ -74,6 +74,12 @@ export interface ChoiceItem extends ItemBase {
   options: ChoiceOption[]
 }
 
+/** 速测: a quick multiple-choice check of a point's meaning or connection, with distractors that only someone who
+ *  remembers the point can rule out. Kept out of daily practice; drawn by the speed test. */
+export interface QuickItem extends Omit<ChoiceItem, 'type'> {
+  type: 'quick'
+}
+
 /** Exam-style completion with a set target: `zh` says in Chinese exactly what sentence to write; the learner
  *  fills the blanks, compares with the standard answer (models[0]; any further models are equally right
  *  wordings) and the check list, then self-grades. */
@@ -87,7 +93,7 @@ export interface ProduceItem extends ItemBase {
   models: string[]
 }
 
-export type Item = FormItem | ChoiceItem | ProduceItem
+export type Item = FormItem | ChoiceItem | ProduceItem | QuickItem
 
 export interface Lesson {
   id: string

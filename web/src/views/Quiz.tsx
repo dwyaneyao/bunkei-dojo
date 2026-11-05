@@ -1,19 +1,39 @@
 import { useEffect, useState } from 'react'
 import { LESSONS, itemsOf, lessonsIn, pointsIn, scopeOf } from '../content'
-import { buildQuiz } from '../lib/plan'
+import { buildQuiz, buildSpeed, speedPoolSize } from '../lib/plan'
 import { useProgress } from '../lib/store'
-import { QUIZ_KEY, resume, startQuiz, writeSaved } from '../lib/sessions'
-import { Icon, Stepper, Switch } from '../components/ui'
+import { QUIZ_KEY, SPEED_KEY, resume, startQuiz, writeSaved, type Saved } from '../lib/sessions'
+import { Icon, Segmented, Stepper, Switch } from '../components/ui'
 import LessonPicker from '../components/LessonPicker'
 
-/** 按课出题: one exam-style item per point of a lesson, answered and checked one by one in a normal session, no
- *  clock. The set is kept until it is finished or given up, so it can be left and resumed at any time. */
+type Kind = 'quiz' | 'speed'
+
+const KINDS: Record<Kind, { key: string; name: string; sub: string; ask: string }> = {
+  quiz: {
+    key: QUIZ_KEY,
+    name: '完成句',
+    sub: '每个文型出一道完成句，按中文意思用日语填空。每题写完就能对照标准答案。',
+    ask: '题型：按中文意思填空，完成句子',
+  },
+  speed: {
+    key: SPEED_KEY,
+    name: '速测',
+    sub: '只用选择题，快速排查文型的意思和接续。干扰项都是容易混淆的文型或接法，没记住就会选错。',
+    ask: '题型：选择题（意思辨析・接续辨析・句子含义）',
+  },
+}
+
+const SPEED_DEFAULT = 20
+
+/** 按课出题: a set of questions over a lesson, answered and checked one by one in a normal session, no clock. Each
+ *  kind keeps its own set until it is finished or given up, so it can be left and resumed at any time. */
 export default function Quiz() {
   const p = useProgress()
-  const [current, setCurrent] = useState(() => resume(QUIZ_KEY))
+  const [kind, setKind] = useState<Kind>('quiz')
+  const [current, setCurrent] = useState<Record<Kind, Saved | null>>(() => ({ quiz: resume(QUIZ_KEY), speed: resume(SPEED_KEY) }))
   const [scope, setScope] = useState(() => scopeOf(p.settings.lesson))
   const [onlyStudied, setOnlyStudied] = useState(false)
-  // null: as many as the range allows (one per point).
+  // null: the default for the kind (one per point for 完成句, SPEED_DEFAULT for 速测).
   const [count, setCount] = useState<number | null>(null)
 
   // The former mock exam kept its unfinished sheet here; it can no longer be opened.
@@ -25,16 +45,26 @@ export default function Quiz() {
     }
   }, [])
 
+  const k = KINDS[kind]
   const inScope = pointsIn(scope).map((pt) => pt.id)
-  const withProduce = inScope.filter((id) => itemsOf(id).some((i) => i.type === 'produce'))
-  const studied = withProduce.filter((id) => p.intro[id]).length
-  const max = onlyStudied ? studied : withProduce.length
-  const n = Math.min(count ?? max, max)
-  const label = scope === 'all' ? '全部课程' : lessonsIn(scope)[0]?.title ?? scope
+  const studiedPoints = inScope.filter((id) => p.intro[id])
+  const points = onlyStudied ? studiedPoints : inScope
+  const max =
+    kind === 'quiz' ? points.filter((id) => itemsOf(id).some((i) => i.type === 'produce')).length : speedPoolSize(points)
+  const n = Math.min(count ?? (kind === 'quiz' ? max : SPEED_DEFAULT), max)
+  const label = (scope === 'all' ? '全部课程' : lessonsIn(scope)[0]?.title ?? scope) + (kind === 'speed' ? ' · 速测' : '')
+  const cur = current[kind]
 
-  const giveUp = () => {
-    writeSaved(QUIZ_KEY, null)
-    setCurrent(null)
+  const giveUp = (which: Kind) => {
+    writeSaved(KINDS[which].key, null)
+    setCurrent({ ...current, [which]: null })
+  }
+
+  const start = () => {
+    if (cur && !confirm(`放弃进行中的「${cur.label ?? k.name}」（${cur.i} / ${cur.steps.length}），重新出题吗？`)) return
+    const items = kind === 'quiz' ? buildQuiz(p, points, { count: n, onlyStudied: false }) : buildSpeed(p, points, n)
+    startQuiz(k.key, items, label)
+    location.hash = `#/session/${kind}`
   }
 
   return (
@@ -42,60 +72,71 @@ export default function Quiz() {
       <header className="page-head">
         <div className="eyebrow">課ごとの練習</div>
         <h1 className="page-title">按课出题</h1>
-        <p className="page-sub">选一课，每个文型出一道完成句。每题写完就能对照标准答案；没有时间限制，可以随时退出，回来接着做。</p>
+        <p className="page-sub">选一课出一组题，逐题作答、马上对照答案。没有时间限制，可以随时退出，回来接着做。</p>
       </header>
 
-      {current && (
-        <section className="card quiz-current">
-          <div className="card-head">
-            <h2 className="card-title">
-              <Icon name="pen" />
-              进行中：{current.label ?? '按课出题'}
-            </h2>
-            <span className="muted small">
-              已做 {current.i} / {current.steps.length} 题
-            </span>
-          </div>
-          <div className="actions">
-            <a className="btn primary big" href="#/session/quiz">
-              <Icon name="play" size={16} />
-              继续
-            </a>
-            <button
-              className="btn big"
-              onClick={() => {
-                if (confirm('放弃这一组题吗？已作答的记录会保留。')) giveUp()
-              }}
-            >
-              放弃
-            </button>
-          </div>
-        </section>
-      )}
+      {(['quiz', 'speed'] as Kind[]).map((w) => {
+        const c = current[w]
+        return (
+          c && (
+            <section key={w} className="card quiz-current">
+              <div className="card-head">
+                <h2 className="card-title">
+                  <Icon name="pen" />
+                  进行中：{c.label ?? KINDS[w].name}
+                </h2>
+                <span className="muted small">
+                  已做 {c.i} / {c.steps.length} 题
+                </span>
+              </div>
+              <div className="actions">
+                <a className="btn primary big" href={`#/session/${w}`}>
+                  <Icon name="play" size={16} />
+                  继续
+                </a>
+                <button
+                  className="btn big"
+                  onClick={() => {
+                    if (confirm('放弃这一组题吗？已作答的记录会保留。')) giveUp(w)
+                  }}
+                >
+                  放弃
+                </button>
+              </div>
+            </section>
+          )
+        )
+      })}
 
       <section className="card">
-        <div className="exam-hero">
+        <Segmented<Kind>
+          value={kind}
+          onChange={(v) => {
+            setKind(v)
+            setCount(null)
+          }}
+          options={[
+            { value: 'quiz', label: '完成句' },
+            { value: 'speed', label: '速测（选择题）' },
+          ]}
+        />
+        <p className="muted small" style={{ marginTop: 12 }}>
+          {k.sub}
+        </p>
+
+        <div className="exam-hero" style={{ marginTop: 18 }}>
           <div>
             <div className="card-title">
               <Icon name="exam" />
               {label} · 共 {n} 题
             </div>
             <p className="muted small" style={{ marginTop: 6 }}>
-              题型：按中文意思填空，完成句子
+              {k.ask}
             </p>
           </div>
-          <button
-            className="btn primary big"
-            disabled={max === 0}
-            onClick={() => {
-              if (current && !confirm(`放弃进行中的「${current.label ?? '按课出题'}」（${current.i} / ${current.steps.length}），重新出题吗？`))
-                return
-              startQuiz(buildQuiz(p, inScope, { count: n, onlyStudied }), label)
-              location.hash = '#/session/quiz'
-            }}
-          >
+          <button className="btn primary big" disabled={max === 0} onClick={start}>
             <Icon name="play" size={16} />
-            {current ? '重新出题' : '开始出题'}
+            {cur ? '重新出题' : '开始出题'}
           </button>
         </div>
 
@@ -118,14 +159,18 @@ export default function Quiz() {
           <div className="opt-row">
             <div className="opt-row-l">
               <b>题数</b>
-              <span>每个文型一题，最多 {max} 题；薄弱、久未练习的文型优先</span>
+              <span>
+                {kind === 'quiz'
+                  ? `每个文型一题，最多 ${max} 题；薄弱、久未练习的文型优先`
+                  : `题库共 ${max} 题；答错过和久未做的题优先，各文型轮流出`}
+              </span>
             </div>
             <Stepper value={n} min={1} max={Math.max(1, max)} onChange={setCount} />
           </div>
           <div className="opt-row">
             <div className="opt-row-l">
               <b>只出已学文型</b>
-              <span>已学 {studied} 个</span>
+              <span>已学 {studiedPoints.length} 个</span>
             </div>
             <Switch checked={onlyStudied} onChange={setOnlyStudied} label="只出已学文型" />
           </div>

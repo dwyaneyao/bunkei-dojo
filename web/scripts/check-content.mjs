@@ -80,14 +80,18 @@ for (const file of fs.readdirSync(DIR).filter((f) => /^l\d+\.json$/.test(f)).sor
     seen.add(i.id)
     if (!points.has(i.point)) at(i.id, `point ${i.point} does not exist in this lesson`)
     if (!i.id.startsWith(i.point + '-')) at(i.id, `item id should start with its point id (${i.point}-)`)
-    byPoint.set(i.point, (byPoint.get(i.point) ?? 0) + 1)
+    if (i.type !== 'quick') byPoint.set(i.point, (byPoint.get(i.point) ?? 0) + 1)
 
     if (i.type === 'form') {
       markup(`${i.id}.cue`, i.cue)
       if (!i.answers?.length) at(i.id, 'no answers')
       for (const a of i.answers ?? []) ja(`${i.id}.answers`, a)
-    } else if (i.type === 'choice') {
-      if (!i.prompt?.includes('＿＿')) at(i.id, 'prompt has no ＿＿')
+    } else if (i.type === 'choice' || i.type === 'quick') {
+      // A quick (速测) item that asks for the meaning of a whole sentence has no blank; it must say so in `ask`.
+      if (!i.prompt?.includes('＿＿') && !(i.type === 'quick' && i.ask)) at(i.id, 'prompt has no ＿＿')
+      if (i.type === 'quick' && !/^.+-q\d+$/.test(i.id)) at(i.id, 'quick item id should end in -q<number>')
+      if (i.type === 'quick' && (i.options ?? []).length < 4) at(i.id, 'quick item needs at least 4 options')
+      if (new Set((i.options ?? []).map((o) => o.text)).size !== (i.options ?? []).length) at(i.id, 'duplicate option text')
       ja(`${i.id}.prompt`, i.prompt?.replace(/＿+/g, ''))
       if ((i.options ?? []).filter((o) => o.ok).length !== 1) at(i.id, 'needs exactly one ok option')
       for (const o of i.options ?? []) {
