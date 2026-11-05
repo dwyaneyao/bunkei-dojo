@@ -4,10 +4,11 @@ import { dayKey, getProgress } from './store'
 
 // A practice session in progress is kept in localStorage, so a reload, or leaving and coming back, carries on
 // where it stopped instead of starting over. Daily practice, drills and the mistake book keep theirs for the
-// day; a lesson quiz (按课出题) is kept until it is finished or given up.
+// day; a test (测试: 常规测试 or 速测) is kept until it is finished or given up.
 
 const SAVE_KEY = 'bunkei-dojo.sessions'
 export const QUIZ_KEY = 'quiz'
+export const SPEED_KEY = 'speed'
 
 export interface Tally {
   ok: number
@@ -26,7 +27,7 @@ export interface Saved {
   label?: string
 }
 
-const keeps = (key: string, s: Saved) => key === QUIZ_KEY || dayKey(s.at) === dayKey(Date.now())
+const keeps = (key: string, s: Saved) => key === QUIZ_KEY || key === SPEED_KEY || dayKey(s.at) === dayKey(Date.now())
 
 function readAll(): Record<string, Saved> {
   try {
@@ -60,8 +61,8 @@ export function resume(key: string): Saved | null {
   return { ...s, i: s.i + 1, at: Date.now(), tally }
 }
 
-/** Start a new lesson quiz, replacing any unfinished one. */
-export function startQuiz(items: string[], label: string) {
+/** Start a new lesson quiz (QUIZ_KEY) or speed test (SPEED_KEY), replacing any unfinished one of that kind. */
+export function startQuiz(key: string, items: string[], label: string) {
   const steps = items.map((item) => ({ kind: 'item' as const, item }))
-  writeSaved(QUIZ_KEY, { steps, i: 0, at: Date.now(), tally: { ok: 0, bad: 0, missed: [] }, retried: [], label })
+  writeSaved(key, { steps, i: 0, at: Date.now(), tally: { ok: 0, bad: 0, missed: [] }, retried: [], label })
 }

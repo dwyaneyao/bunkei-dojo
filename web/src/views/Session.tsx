@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { itemById, itemsOf, pointById, scopeOf } from '../content'
 import { buildDaily, buildDrill, buildMistakes, mistakeItems, type Step } from '../lib/plan'
 import { dayKey, getProgress, markIntro, useProgress, type Mode } from '../lib/store'
-import { QUIZ_KEY, resume, writeSaved, type Tally } from '../lib/sessions'
+import { QUIZ_KEY, SPEED_KEY, resume, writeSaved, type Tally } from '../lib/sessions'
 import { useFocusMode } from '../lib/focus'
 import { J } from '../lib/markup'
 import PointCard from '../components/PointCard'
@@ -11,15 +11,22 @@ import { CountUp, Icon, Stamp } from '../components/ui'
 
 export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; point?: string }) {
   const p = useProgress()
+  // A lesson quiz or speed test is built on its setup page and only ever resumed here.
+  const set = mode === 'quiz' || mode === 'speed'
   const key =
-    mode === 'quiz' ? QUIZ_KEY : mode === 'drill' && point ? `drill:${point}` : `${mode}:${scopeOf(p.settings.lesson)}`
+    mode === 'quiz'
+      ? QUIZ_KEY
+      : mode === 'speed'
+        ? SPEED_KEY
+        : mode === 'drill' && point
+          ? `drill:${point}`
+          : `${mode}:${scopeOf(p.settings.lesson)}`
   const [saved] = useState(() => resume(key))
-  // The queue is fixed when the session starts; retries are spliced in as we go. A lesson quiz is built on its
-  // setup page and only ever resumed here.
+  // The queue is fixed when the session starts; retries are spliced in as we go.
   const [steps, setSteps] = useState<Step[]>(
     () =>
       saved?.steps ??
-      (mode === 'quiz'
+      (set
         ? []
         : mode === 'drill' && point
           ? buildDrill(point)
@@ -45,9 +52,9 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
     window.scrollTo(0, 0)
   }, [i])
 
-  const exitHref = mode === 'quiz' ? '#/quiz' : mode === 'drill' && point ? `#/point/${point}` : '#/'
+  const exitHref = set ? '#/quiz' : mode === 'drill' && point ? `#/point/${point}` : '#/'
 
-  if (total === 0 && mode === 'quiz')
+  if (total === 0 && set)
     return (
       <div className="card finish">
         <Stamp kind="ok" size={84} />
@@ -55,7 +62,7 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
         <p className="muted">选择一课，每个文型出一道题。</p>
         <div className="actions" style={{ justifyContent: 'center' }}>
           <a className="btn primary big" href="#/quiz">
-            按课出题
+            去测试
           </a>
         </div>
       </div>
@@ -80,10 +87,10 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
       <div className="card finish">
         <Stamp kind="ok" size={84} />
         <h1>今日暂无练习内容</h1>
-        <p className="muted">到期的复习已全部完成，新文型也已达到每日上限。你可以按课出题，或在「文型」页选择单个文型进行专项练习。</p>
+        <p className="muted">到期的复习已全部完成，新文型也已达到每日上限。你可以做一次测试，或在「文型」页选择单个文型进行专项练习。</p>
         <div className="actions" style={{ justifyContent: 'center' }}>
           <a className="btn primary big" href="#/quiz">
-            按课出题
+            去测试
           </a>
           <a className="btn big" href="#/points">
             浏览文型
@@ -135,9 +142,9 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
           <a className="btn primary big" href="#/">
             返回今日
           </a>
-          {mode === 'quiz' && (
+          {set && (
             <a className="btn big" href="#/quiz">
-              换一课再出题
+              再测一组
             </a>
           )}
           {mode !== 'mistakes' && mistakeItems(p).length > 0 && (
@@ -158,7 +165,7 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
   const done = (r: StepResult, itemId: string) => {
     const it = itemById.get(itemId)!
     setTally((t) => ({ ok: t.ok + (r.ok ? 1 : 0), bad: t.bad + (r.ok ? 0 : 1), missed: r.ok ? t.missed : [...t.missed, it.point] }))
-    if (!r.ok && mode !== 'quiz') {
+    if (!r.ok && !set) {
       const next = [...steps]
       const at = Math.min(next.length, i + 4)
       if (it.type !== 'produce' && !retried.has(itemId)) {
@@ -220,7 +227,8 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
         </div>
       )
     else if (it.type === 'form') body = <FormStep key={i} item={it} mode={mode} onDone={(r) => done(r, it.id)} />
-    else if (it.type === 'choice') body = <ChoiceStep key={i} item={it} mode={mode} onDone={(r) => done(r, it.id)} />
+    else if (it.type === 'choice' || it.type === 'quick')
+      body = <ChoiceStep key={i} item={it} mode={mode} onDone={(r) => done(r, it.id)} />
     else body = <ProduceStep key={i} item={it} mode={mode} onDone={(r) => done(r, it.id)} />
   }
 

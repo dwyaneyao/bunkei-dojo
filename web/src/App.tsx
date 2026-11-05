@@ -31,7 +31,7 @@ function useRoute() {
 const NAV: { href: string; label: string; icon: IconName; match: string[] }[] = [
   { href: '#/', label: '今日', icon: 'home', match: [''] },
   { href: '#/points', label: '文型', icon: 'book', match: ['points', 'point'] },
-  { href: '#/quiz', label: '按课出题', icon: 'exam', match: ['quiz', 'exam'] },
+  { href: '#/quiz', label: '测试', icon: 'exam', match: ['quiz', 'exam'] },
   { href: '#/guide', label: '学习方法', icon: 'compass', match: ['guide'] },
 ]
 
@@ -79,7 +79,7 @@ export default function App() {
   let view
   switch (head) {
     case 'session':
-      view = <Session key={location.hash} mode={arg === 'drill' || arg === 'mistakes' || arg === 'quiz' ? arg : 'daily'} point={route[2]} />
+      view = <Session key={location.hash} mode={arg === 'drill' || arg === 'mistakes' || arg === 'quiz' || arg === 'speed' ? arg : 'daily'} point={route[2]} />
       break
     case 'quiz':
     case 'exam': // the former mock exam

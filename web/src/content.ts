@@ -1,4 +1,4 @@
-import type { Item, Lesson, Point, ProduceItem } from './types'
+import type { Item, Lesson, Point, ProduceItem, QuickItem } from './types'
 import { blankCount, modelFills } from './lib/answer'
 
 // Every exam-review/content/*.json file is a lesson. Adding a lesson = adding a file.
@@ -15,7 +15,9 @@ export const pointById = new Map(POINTS.map((p) => [p.id, p]))
 export const itemById = new Map(ITEMS.map((i) => [i.id, i]))
 export const lessonOfPoint = new Map(LESSONS.flatMap((l) => l.points.map((p) => [p.id, l] as const)))
 
-export const itemsOf = (pointId: string) => ITEMS.filter((i) => i.point === pointId)
+/** A point's practice items (接续・辨析・完成句); its 速测 items are kept apart, see quickOf. */
+export const itemsOf = (pointId: string) => ITEMS.filter((i) => i.point === pointId && i.type !== 'quick')
+export const quickOf = (pointId: string) => ITEMS.filter((i): i is QuickItem => i.point === pointId && i.type === 'quick')
 
 /** The lesson choice in effect: a lesson id or 'all'. Unset, or a lesson that no longer exists, means the
  *  newest lesson, so a newly added lesson is picked up without touching the settings. */
@@ -42,7 +44,8 @@ export const PROBLEMS: string[] = (() => {
       if (seen.has(i.id)) out.push(`重复的 id：${i.id}`)
       seen.add(i.id)
       if (!pointById.has(i.point)) out.push(`${i.id}：文型 ${i.point} 不存在`)
-      if (i.type === 'choice' && i.options.filter((o) => o.ok).length !== 1) out.push(`${i.id}：选择题必须有且仅有一个正确选项`)
+      if ((i.type === 'choice' || i.type === 'quick') && i.options.filter((o) => o.ok).length !== 1)
+        out.push(`${i.id}：选择题必须有且仅有一个正确选项`)
       if (i.type === 'choice' && !i.prompt.includes('＿＿')) out.push(`${i.id}：题干缺少＿＿`)
       if (i.type === 'produce') {
         const n = blankCount(i.prompt)

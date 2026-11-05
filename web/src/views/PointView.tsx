@@ -1,4 +1,4 @@
-import { itemsOf, lessonOfPoint, pointById } from '../content'
+import { itemsOf, lessonOfPoint, pointById, quickOf } from '../content'
 import { LEVEL_HINT, LEVELS, mastery } from '../lib/plan'
 import { useProgress } from '../lib/store'
 import { formatInterval } from '../lib/fsrs'
@@ -6,7 +6,7 @@ import { J } from '../lib/markup'
 import PointCard from '../components/PointCard'
 import { Icon } from '../components/ui'
 
-const KIND = { form: '接续', choice: '辨析', produce: '完成句' } as const
+const KIND = { form: '接续', choice: '辨析', produce: '完成句', quick: '速测' } as const
 
 export default function PointView({ id }: { id: string }) {
   const p = useProgress()
@@ -50,7 +50,7 @@ export default function PointView({ id }: { id: string }) {
           <div className="card-head">
             <h2 className="card-title">
               <Icon name="exam" />
-              练习题 · {items.length} 道
+              练习题 · {items.length} 道{quickOf(id).length > 0 && ` · 速测 ${quickOf(id).length} 道`}
             </h2>
             <span className="muted small">{lesson?.title}</span>
           </div>
