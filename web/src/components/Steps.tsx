@@ -25,12 +25,13 @@ const PointTag = ({ id }: { id: string }) => {
   ) : null
 }
 
-function Kind({ icon, label, point }: { icon: IconName; label: string; point: string }) {
+/** The step's kind and, unless it would give the answer away, the point it tests. */
+function Kind({ icon, label, point }: { icon: IconName; label: string; point?: string }) {
   return (
     <div className="step-kind">
       <Icon name={icon} size={16} />
       {label}
-      <PointTag id={point} />
+      {point && <PointTag id={point} />}
     </div>
   )
 }
@@ -253,7 +254,8 @@ export function ChoiceStep({ item, mode, onDone }: { item: ChoiceItem | QuickIte
   return (
     <div className="step">
       <div className="step-card">
-        <Kind icon="eye" label={item.type === 'quick' ? '速测' : '辨析'} point={item.point} />
+        {/* Naming the point before the answer would tell which option is right. */}
+        <Kind icon="eye" label={item.type === 'quick' ? '速测' : '辨析'} point={pick === null ? undefined : item.point} />
         <p className="step-ask">{item.ask ?? '选出填入空格最恰当的一项'}</p>
         <Sentence text={item.prompt} />
         <ol className="options">
