@@ -279,6 +279,23 @@ export function ChoiceStep({ item, mode, onDone }: { item: ChoiceItem | QuickIte
             )
           })}
         </ol>
+        {pick !== null && (item.zh || item.explain) && (
+          <div className="panel item-explain">
+            <div className="lbl">题目解析</div>
+            {item.zh && (
+              <p>
+                <b>句意</b>
+                <J>{item.zh}</J>
+              </p>
+            )}
+            {item.explain && (
+              <p>
+                <b>关键</b>
+                <J>{item.explain}</J>
+              </p>
+            )}
+          </div>
+        )}
       </div>
       {pick !== null && <CardPeek point={item.point} />}
       {pick !== null && right && (

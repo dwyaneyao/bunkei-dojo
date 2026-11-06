@@ -94,6 +94,9 @@ for (const file of fs.readdirSync(DIR).filter((f) => /^l\d+\.json$/.test(f)).sor
       if (new Set((i.options ?? []).map((o) => o.text)).size !== (i.options ?? []).length) at(i.id, 'duplicate option text')
       ja(`${i.id}.prompt`, i.prompt?.replace(/＿+/g, ''))
       if ((i.options ?? []).filter((o) => o.ok).length !== 1) at(i.id, 'needs exactly one ok option')
+      if (!i.explain?.trim()) at(i.id, 'missing explain (题目解析: the clue that decides this item)')
+      markup(`${i.id}.explain`, i.explain)
+      markup(`${i.id}.zh`, i.zh)
       for (const o of i.options ?? []) {
         // A 含义理解 option is a Chinese translation: no kana in it, so only its markup is checked.
         if (i.type === 'quick' && !KANA.test(o.text)) markup(`${i.id}.option`, o.text)

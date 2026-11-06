@@ -72,6 +72,10 @@ export interface ChoiceItem extends ItemBase {
   /** Instruction shown above the prompt when the default ("pick the best fill") does not fit. */
   ask?: string
   options: ChoiceOption[]
+  /** 题目解析, shown after answering. `zh`: the whole sentence (with the right answer) in Chinese; left out when the
+   *  options are themselves translations or whole sentences. `explain`: the clue in this item that decides it. */
+  zh?: string
+  explain?: string
 }
 
 /** 速测: a quick multiple-choice check of a point's meaning or connection, with distractors that only someone who

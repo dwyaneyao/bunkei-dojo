@@ -2771,3 +2771,23 @@ label.list-row:hover {
     margin-top: 0;
   }
 }
+
+/* ---------- Per-item explanation (题目解析) ---------- */
+
+.item-explain {
+  margin-top: 16px;
+  display: grid;
+  gap: 8px;
+  line-height: 1.75;
+}
+.item-explain p {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+}
+.item-explain b {
+  font-size: 0.78rem;
+  color: var(--ai);
+  padding-top: 3px;
+  white-space: nowrap;
+}
