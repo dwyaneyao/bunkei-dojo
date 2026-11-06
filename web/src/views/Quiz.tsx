@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { LESSONS, itemsOf, lessonsIn, pointsIn, scopeOf } from '../content'
+import { LESSONS, itemsOf, lessonsIn, pointsIn, quickOf, scopeOf } from '../content'
 import { buildQuiz, buildSpeed, speedPoolSize } from '../lib/plan'
 import { useProgress } from '../lib/store'
 import { QUIZ_KEY, SPEED_KEY, resume, startQuiz, writeSaved, type Saved } from '../lib/sessions'
@@ -23,7 +23,6 @@ const KINDS: Record<Kind, { key: string; name: string; sub: string; ask: string 
   },
 }
 
-const SPEED_DEFAULT = 20
 
 /** 测试: a set of questions over a lesson, answered and checked one by one in a normal session, no clock. Each
  *  kind keeps its own set until it is finished or given up, so it can be left and resumed at any time. */
@@ -33,7 +32,7 @@ export default function Quiz() {
   const [current, setCurrent] = useState<Record<Kind, Saved | null>>(() => ({ quiz: resume(QUIZ_KEY), speed: resume(SPEED_KEY) }))
   const [scope, setScope] = useState(() => scopeOf(p.settings.lesson))
   const [onlyStudied, setOnlyStudied] = useState(false)
-  // null: the default for the kind (one per point for 常规测试, SPEED_DEFAULT for 速测).
+  // null: the default, one question per point (more is possible for 速测, which has several per point).
   const [count, setCount] = useState<number | null>(null)
 
   // The former mock exam kept its unfinished sheet here; it can no longer be opened.
@@ -49,9 +48,12 @@ export default function Quiz() {
   const inScope = pointsIn(scope).map((pt) => pt.id)
   const studiedPoints = inScope.filter((id) => p.intro[id])
   const points = onlyStudied ? studiedPoints : inScope
-  const max =
-    kind === 'quiz' ? points.filter((id) => itemsOf(id).some((i) => i.type === 'produce')).length : speedPoolSize(points)
-  const n = Math.min(count ?? (kind === 'quiz' ? max : SPEED_DEFAULT), max)
+  const perPoint =
+    kind === 'quiz'
+      ? points.filter((id) => itemsOf(id).some((i) => i.type === 'produce')).length
+      : points.filter((id) => quickOf(id).length > 0).length
+  const max = kind === 'quiz' ? perPoint : speedPoolSize(points)
+  const n = Math.min(count ?? perPoint, max)
   const label = (scope === 'all' ? '全部课程' : lessonsIn(scope)[0]?.title ?? scope) + (kind === 'speed' ? ' · 速测' : ' · 常规测试')
   const cur = current[kind]
 
@@ -162,7 +164,7 @@ export default function Quiz() {
               <span>
                 {kind === 'quiz'
                   ? `每个文型一题，最多 ${max} 题；薄弱、久未练习的文型优先`
-                  : `题库共 ${max} 题；答错过和久未做的题优先，各文型轮流出`}
+                  : `默认每个文型一题（${perPoint} 题），最多 ${max} 题；答错过和久未做的题优先`}
               </span>
             </div>
             <Stepper value={n} min={1} max={Math.max(1, max)} onChange={setCount} />
