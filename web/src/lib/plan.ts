@@ -1,4 +1,4 @@
-import { ITEMS, itemById, itemsOf, pointById, pointsIn, quickOf, scopeOf } from '../content'
+import { ITEMS, itemById, itemsOf, pointById, pointsIn, scopeOf, speedOf, type SpeedKind } from '../content'
 import type { ErrorTag, Item } from '../types'
 import { dayKey, type Attempt, type Progress } from './store'
 import { shuffle } from './util'
@@ -11,7 +11,7 @@ const endOfToday = (now: number) => {
   return d.getTime()
 }
 
-const STAGE: Record<Item['type'], number> = { form: 0, choice: 1, quick: 1, produce: 2 }
+const STAGE: Record<Item['type'], number> = { form: 0, fill: 0, choice: 1, quick: 1, produce: 2 }
 
 /** Reorder so the same point rarely appears twice in a row (interleaving). */
 export function interleave(ids: string[]): string[] {
@@ -242,7 +242,7 @@ export function buildQuiz(p: Progress, lessonPoints: string[], opts: QuizOptions
 /** Quick items of the given points: those last answered wrong first, then never-seen ones, then the least recently
  *  seen, taken in turn from each point so the set covers the lesson; ordered so one point rarely comes twice in a
  *  row. */
-export function buildSpeed(p: Progress, points: string[], count: number): string[] {
+export function buildSpeed(p: Progress, points: string[], count: number, kind: SpeedKind = 'choice'): string[] {
   const last = new Map<string, { t: number; ok: boolean }>()
   for (const a of p.log) last.set(a.item, { t: a.t, ok: a.ok })
   const rank = (id: string) => {
@@ -250,7 +250,7 @@ export function buildSpeed(p: Progress, points: string[], count: number): string
     return (l ? (l.ok ? 2e13 + l.t : 0) : 1e13) + Math.random() * 1000
   }
   const queues = shuffle(points)
-    .map((pt) => quickOf(pt).map((i) => i.id).sort((a, b) => rank(a) - rank(b)))
+    .map((pt) => speedOf(pt, kind).map((i) => i.id).sort((a, b) => rank(a) - rank(b)))
     .filter((q) => q.length)
   const picked: string[] = []
   while (picked.length < count && queues.some((q) => q.length))
@@ -258,5 +258,5 @@ export function buildSpeed(p: Progress, points: string[], count: number): string
   return interleave(shuffle(picked))
 }
 
-export const speedPoolSize = (points: string[]) => points.reduce((n, pt) => n + quickOf(pt).length, 0)
+export const speedPoolSize = (points: string[], kind: SpeedKind) => points.reduce((n, pt) => n + speedOf(pt, kind).length, 0)
 

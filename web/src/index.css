@@ -2780,7 +2780,8 @@ label.list-row:hover {
   gap: 8px;
   line-height: 1.75;
 }
-.item-explain p {
+.item-explain p,
+.item-explain .row {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   gap: 10px;
@@ -2790,4 +2791,9 @@ label.list-row:hover {
   color: var(--ai);
   padding-top: 3px;
   white-space: nowrap;
+}
+
+.item-explain .row .blanks {
+  font-size: 1.05rem;
+  line-height: 2.1;
 }

@@ -84,6 +84,19 @@ export interface QuickItem extends Omit<ChoiceItem, 'type'> {
   type: 'quick'
 }
 
+/** 速测填空: a whole sentence with only the point's key words blanked; the learner types them in the form the
+ *  sentence needs (past, です体, before a noun …). Auto-checked. Kept out of daily practice like QuickItem. */
+export interface FillItem extends ItemBase {
+  type: 'fill'
+  prompt: string
+  /** The whole sentence in Chinese, so it is clear which point is meant. */
+  zh: string
+  /** Every right answer: each entry is one complete set of fills, one per blank. */
+  answers: string[][]
+  /** Why this form (the clue in the sentence). */
+  explain: string
+}
+
 /** Exam-style completion with a set target: `zh` says in Chinese exactly what sentence to write; the learner
  *  fills the blanks, compares with the standard answer (models[0]; any further models are equally right
  *  wordings) and the check list, then self-grades. */
@@ -97,7 +110,7 @@ export interface ProduceItem extends ItemBase {
   models: string[]
 }
 
-export type Item = FormItem | ChoiceItem | ProduceItem | QuickItem
+export type Item = FormItem | ChoiceItem | ProduceItem | QuickItem | FillItem
 
 export interface Lesson {
   id: string

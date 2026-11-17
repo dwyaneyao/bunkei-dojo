@@ -16,7 +16,7 @@ export interface Attempt {
   at?: number
   item: string
   point: string
-  type: 'form' | 'choice' | 'produce'
+  type: 'form' | 'choice' | 'produce' | 'fill'
   mode: Mode
   ok: boolean
   grade: Grade
