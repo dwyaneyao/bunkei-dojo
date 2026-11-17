@@ -2793,6 +2793,12 @@ label.list-row:hover {
   white-space: nowrap;
 }
 
+.item-explain .row {
+  align-items: start;
+}
+.item-explain .row b {
+  padding-top: 0.7em;
+}
 .item-explain .row .blanks {
   font-size: 1.05rem;
   line-height: 2.1;
