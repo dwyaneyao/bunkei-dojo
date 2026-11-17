@@ -6,7 +6,7 @@ import { QUIZ_KEY, SPEED_KEY, resume, writeSaved, type Tally } from '../lib/sess
 import { useFocusMode } from '../lib/focus'
 import { J } from '../lib/markup'
 import PointCard from '../components/PointCard'
-import { ChoiceStep, FormStep, ProduceStep, type StepResult } from '../components/Steps'
+import { ChoiceStep, FillStep, FormStep, ProduceStep, type StepResult } from '../components/Steps'
 import { CountUp, Icon, Stamp } from '../components/ui'
 
 export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; point?: string }) {
@@ -227,6 +227,7 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
         </div>
       )
     else if (it.type === 'form') body = <FormStep key={i} item={it} mode={mode} onDone={(r) => done(r, it.id)} />
+    else if (it.type === 'fill') body = <FillStep key={i} item={it} mode={mode} onDone={(r) => done(r, it.id)} />
     else if (it.type === 'choice' || it.type === 'quick')
       body = <ChoiceStep key={i} item={it} mode={mode} onDone={(r) => done(r, it.id)} />
     else body = <ProduceStep key={i} item={it} mode={mode} onDone={(r) => done(r, it.id)} />

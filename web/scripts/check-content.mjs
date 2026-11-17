@@ -4,7 +4,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-const DIR = path.resolve(import.meta.dirname, '../../content')
+// CONTENT_DIR checks a draft folder instead of content/.
+const DIR = process.env.CONTENT_DIR ? path.resolve(process.env.CONTENT_DIR) : path.resolve(import.meta.dirname, '../../content')
 const RUBY = /\{([^|{}]+)\|([^{}]+)\}/g
 const KANJI = /[一-鿿々]/
 const KANA = /[぀-ヿ]/
@@ -80,7 +81,7 @@ for (const file of fs.readdirSync(DIR).filter((f) => /^l\d+\.json$/.test(f)).sor
     seen.add(i.id)
     if (!points.has(i.point)) at(i.id, `point ${i.point} does not exist in this lesson`)
     if (!i.id.startsWith(i.point + '-')) at(i.id, `item id should start with its point id (${i.point}-)`)
-    if (i.type !== 'quick') byPoint.set(i.point, (byPoint.get(i.point) ?? 0) + 1)
+    if (i.type !== 'quick' && i.type !== 'fill') byPoint.set(i.point, (byPoint.get(i.point) ?? 0) + 1)
 
     if (i.type === 'form') {
       markup(`${i.id}.cue`, i.cue)
@@ -103,6 +104,21 @@ for (const file of fs.readdirSync(DIR).filter((f) => /^l\d+\.json$/.test(f)).sor
         else ja(`${i.id}.option`, o.text)
         markup(`${i.id}.why`, o.why)
         if (!o.ok && !TAGS.has(o.tag)) at(i.id, `wrong option needs an error tag: ${o.text}`)
+      }
+    } else if (i.type === 'fill') {
+      // 速测填空: type the point's key words into the blank(s); each entry of `answers` is one full set of fills.
+      const n = (i.prompt ?? '').split(/＿{2,}/).length - 1
+      if (!/^.+-k\d+$/.test(i.id)) at(i.id, 'fill item id should end in -k<number>')
+      if (n < 1) at(i.id, 'prompt has no ＿＿')
+      ja(`${i.id}.prompt`, i.prompt?.replace(/＿+/g, ''))
+      if (!i.zh?.trim()) at(i.id, 'missing zh (the Chinese meaning of the sentence)')
+      markup(`${i.id}.zh`, i.zh)
+      if (!i.explain?.trim()) at(i.id, 'missing explain (why this form)')
+      markup(`${i.id}.explain`, i.explain)
+      if (!Array.isArray(i.answers) || !i.answers.length) at(i.id, 'no answers')
+      for (const set of i.answers ?? []) {
+        if (!Array.isArray(set) || set.length !== n) at(i.id, `each answer must list ${n} fill(s): ${JSON.stringify(set)}`)
+        else for (const a of set) ja(`${i.id}.answers`, a)
       }
     } else if (i.type === 'produce') {
       const parts = (i.prompt ?? '').split(/＿{2,}/)

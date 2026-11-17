@@ -1,4 +1,4 @@
-import type { Item, Lesson, Point, ProduceItem, QuickItem } from './types'
+import type { FillItem, Item, Lesson, Point, ProduceItem, QuickItem } from './types'
 import { blankCount, modelFills } from './lib/answer'
 
 // Every exam-review/content/*.json file is a lesson. Adding a lesson = adding a file.
@@ -15,9 +15,15 @@ export const pointById = new Map(POINTS.map((p) => [p.id, p]))
 export const itemById = new Map(ITEMS.map((i) => [i.id, i]))
 export const lessonOfPoint = new Map(LESSONS.flatMap((l) => l.points.map((p) => [p.id, l] as const)))
 
-/** A point's practice items (接续・辨析・完成句); its 速测 items are kept apart, see quickOf. */
-export const itemsOf = (pointId: string) => ITEMS.filter((i) => i.point === pointId && i.type !== 'quick')
+/** A point's practice items (接续・辨析・完成句); its 速测 items are kept apart, see speedOf. */
+export const itemsOf = (pointId: string) => ITEMS.filter((i) => i.point === pointId && i.type !== 'quick' && i.type !== 'fill')
 export const quickOf = (pointId: string) => ITEMS.filter((i): i is QuickItem => i.point === pointId && i.type === 'quick')
+export const fillOf = (pointId: string) => ITEMS.filter((i): i is FillItem => i.point === pointId && i.type === 'fill')
+
+/** 速测 question kinds: choice (QuickItem), fill-in (FillItem) or both. */
+export type SpeedKind = 'choice' | 'fill' | 'mix'
+export const speedOf = (pointId: string, kind: SpeedKind): (QuickItem | FillItem)[] =>
+  kind === 'choice' ? quickOf(pointId) : kind === 'fill' ? fillOf(pointId) : [...quickOf(pointId), ...fillOf(pointId)]
 
 /** The lesson choice in effect: a lesson id or 'all'. Unset, or a lesson that no longer exists, means the
  *  newest lesson, so a newly added lesson is picked up without touching the settings. */
@@ -57,6 +63,8 @@ export const PROBLEMS: string[] = (() => {
           else if (modelFills(m).length !== n) out.push(`${i.id}：标准答案的填空数与题目的＿＿数不一致`)
       }
       if (i.type === 'form' && i.answers.length === 0) out.push(`${i.id}：缺少答案`)
+      if (i.type === 'fill' && (!i.answers.length || i.answers.some((a) => a.length !== blankCount(i.prompt))))
+        out.push(`${i.id}：填空题的答案数与＿＿数不一致`)
     }
   }
   return out

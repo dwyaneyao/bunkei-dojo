@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { LESSONS, itemsOf, lessonsIn, pointsIn, quickOf, scopeOf } from '../content'
+import { LESSONS, itemsOf, lessonsIn, pointsIn, scopeOf, speedOf, type SpeedKind } from '../content'
 import { buildQuiz, buildSpeed, speedPoolSize } from '../lib/plan'
 import { useProgress } from '../lib/store'
 import { QUIZ_KEY, SPEED_KEY, resume, startQuiz, writeSaved, type Saved } from '../lib/sessions'
@@ -18,9 +18,24 @@ const KINDS: Record<Kind, { key: string; name: string; sub: string; ask: string 
   speed: {
     key: SPEED_KEY,
     name: '速测',
-    sub: '选择题：快速排查文型的意思和接续。干扰项都是容易混淆的文型或接法，没记住就会选错。',
-    ask: '题型：选择题（意思辨析・接续辨析・句子含义）',
+    sub: '快速排查文型的意思和接续：选择题的干扰项都是容易混淆的文型或接法；填空题看中文意思，填出文型的关键词，需要时要变形。',
+    ask: '',
   },
+}
+
+const SPEED_KINDS: Record<SpeedKind, { name: string; ask: string }> = {
+  choice: { name: '选择', ask: '题型：选择题（意思辨析・接续辨析・句子含义）' },
+  fill: { name: '填空', ask: '题型：填空题（看中文意思，填出文型的关键词，需要时变形）' },
+  mix: { name: '混合', ask: '题型：选择题和填空题混合' },
+}
+const SPEED_KIND_STORE = 'bunkei-dojo.speedKind'
+const readSpeedKind = (): SpeedKind => {
+  try {
+    const v = localStorage.getItem(SPEED_KIND_STORE)
+    return v === 'fill' || v === 'mix' ? v : 'choice'
+  } catch {
+    return 'choice'
+  }
 }
 
 
@@ -34,6 +49,16 @@ export default function Quiz() {
   const [onlyStudied, setOnlyStudied] = useState(false)
   // null: the default, one question per point (more is possible for 速测, which has several per point).
   const [count, setCount] = useState<number | null>(null)
+  const [speedKind, setSpeedKindState] = useState<SpeedKind>(readSpeedKind)
+  const setSpeedKind = (v: SpeedKind) => {
+    setSpeedKindState(v)
+    setCount(null)
+    try {
+      localStorage.setItem(SPEED_KIND_STORE, v)
+    } catch {
+      /* storage blocked */
+    }
+  }
 
   // The former mock exam kept its unfinished sheet here; it can no longer be opened.
   useEffect(() => {
@@ -51,10 +76,10 @@ export default function Quiz() {
   const perPoint =
     kind === 'quiz'
       ? points.filter((id) => itemsOf(id).some((i) => i.type === 'produce')).length
-      : points.filter((id) => quickOf(id).length > 0).length
-  const max = kind === 'quiz' ? perPoint : speedPoolSize(points)
+      : points.filter((id) => speedOf(id, speedKind).length > 0).length
+  const max = kind === 'quiz' ? perPoint : speedPoolSize(points, speedKind)
   const n = Math.min(count ?? perPoint, max)
-  const label = (scope === 'all' ? '全部课程' : lessonsIn(scope)[0]?.title ?? scope) + (kind === 'speed' ? ' · 速测' : ' · 常规测试')
+  const label = (scope === 'all' ? '全部课程' : lessonsIn(scope)[0]?.title ?? scope) + (kind === 'speed' ? ` · 速测（${SPEED_KINDS[speedKind].name}）` : ' · 常规测试')
   const cur = current[kind]
 
   const giveUp = (which: Kind) => {
@@ -64,7 +89,7 @@ export default function Quiz() {
 
   const start = () => {
     if (cur && !confirm(`放弃进行中的「${cur.label ?? k.name}」（${cur.i} / ${cur.steps.length}），重新出题吗？`)) return
-    const items = kind === 'quiz' ? buildQuiz(p, points, { count: n, onlyStudied: false }) : buildSpeed(p, points, n)
+    const items = kind === 'quiz' ? buildQuiz(p, points, { count: n, onlyStudied: false }) : buildSpeed(p, points, n, speedKind)
     startQuiz(k.key, items, label)
     location.hash = `#/session/${kind}`
   }
@@ -119,7 +144,7 @@ export default function Quiz() {
           }}
           options={[
             { value: 'quiz', label: '常规测试（填空）' },
-            { value: 'speed', label: '速测（选择）' },
+            { value: 'speed', label: '速测（选择・填空）' },
           ]}
         />
         <p className="muted small" style={{ marginTop: 12 }}>
@@ -133,7 +158,7 @@ export default function Quiz() {
               {label} · 共 {n} 题
             </div>
             <p className="muted small" style={{ marginTop: 6 }}>
-              {k.ask}
+              {kind === 'speed' ? SPEED_KINDS[speedKind].ask : k.ask}
             </p>
           </div>
           <button className="btn primary big" disabled={max === 0} onClick={start}>
@@ -143,6 +168,19 @@ export default function Quiz() {
         </div>
 
         <div className="option-rows">
+          {kind === 'speed' && (
+            <div className="opt-row">
+              <div className="opt-row-l">
+                <b>题型</b>
+                <span>选择、填空或两种混合</span>
+              </div>
+              <Segmented<SpeedKind>
+                value={speedKind}
+                onChange={setSpeedKind}
+                options={(Object.keys(SPEED_KINDS) as SpeedKind[]).map((v) => ({ value: v, label: SPEED_KINDS[v].name }))}
+              />
+            </div>
+          )}
           {LESSONS.length > 1 && (
             <div className="opt-row">
               <div className="opt-row-l">

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import type { ChoiceItem, ErrorTag, FormItem, ProduceItem, QuickItem } from '../types'
+import type { ChoiceItem, ErrorTag, FillItem, FormItem, ProduceItem, QuickItem } from '../types'
 import { TAG_HINT, TAG_LABEL } from '../types'
 import { J } from '../lib/markup'
 import { checkForm, compose, modelFills } from '../lib/answer'
@@ -306,6 +306,119 @@ export function ChoiceStep({ item, mode, onDone }: { item: ChoiceItem | QuickIte
           <p className="sheet-note">
             <J>{right.why}</J>
           </p>
+        </Sheet>
+      )}
+    </div>
+  )
+}
+
+// ---------- 速测填空：type the point's key words, in the form the sentence needs ----------
+
+export function FillStep({ item, mode, onDone }: { item: FillItem; mode: Mode; onDone: (r: StepResult) => void }) {
+  const [vals, setVals] = useState<string[]>([])
+  const [res, setRes] = useState<null | boolean>(null)
+  const [overruled, setOverruled] = useState(false)
+  const attempt = useRef<{ id: string; before: MemoryState | undefined } | null>(null)
+  const empty = !vals.some((v) => v?.trim())
+
+  const submit = () => {
+    if (res !== null) return
+    const ok = !empty && item.answers.some((set) => set.every((a, i) => checkForm(vals[i] ?? '', [a])))
+    setRes(ok)
+    const before = getProgress().cards[item.id]
+    const id = record({
+      item: item.id,
+      point: item.point,
+      type: 'fill',
+      mode,
+      ok,
+      grade: ok ? 3 : 1,
+      answer: vals,
+      sentence: compose(item.prompt, vals),
+      tags: [],
+    })
+    attempt.current = { id, before }
+  }
+  const overrule = () => {
+    if (!attempt.current) return
+    overruleAttempt(attempt.current.id, attempt.current.before)
+    setOverruled(true)
+    setRes(true)
+  }
+  const next = () => onDone({ ok: !!res, grade: res ? 3 : 1 })
+  const nextBtn = useFocusNext(res !== null)
+
+  return (
+    <div className="step">
+      <div className="step-card">
+        <Kind icon="pen" label="速测 · 填空" point={res === null ? undefined : item.point} />
+        <p className="step-ask">按中文意思，在空格里填入文型的关键词（句子需要时要变形）。</p>
+        <p className="zh-line">{item.zh}</p>
+        <Blanks prompt={item.prompt} values={vals} onChange={setVals} onEnter={submit} disabled={res !== null} autoFocus />
+        {res === null && (
+          <div className="actions">
+            <button className="btn primary big" onClick={submit}>
+              {empty ? '不会，看答案' : '提交'} <kbd>Enter</kbd>
+            </button>
+          </div>
+        )}
+        {res !== null && (
+          <div className="panel item-explain">
+            <div className="lbl">题目解析</div>
+            <div className="row">
+              <b>正确</b>
+              <Sentence text={compose(item.prompt, item.answers[0])} />
+            </div>
+            {item.answers.length > 1 && (
+              <p>
+                <b>也可以</b>
+                <span lang="ja">
+                  {item.answers.slice(1).map((set, i) => (
+                    <span key={i}>
+                      {i > 0 && <span className="muted"> ／ </span>}
+                      <J>{set.join(' … ')}</J>
+                    </span>
+                  ))}
+                </span>
+              </p>
+            )}
+            <p>
+              <b>关键</b>
+              <J>{item.explain}</J>
+            </p>
+          </div>
+        )}
+      </div>
+      {res !== null && <CardPeek point={item.point} />}
+      {res !== null && (
+        <Sheet
+          ok={res}
+          title={overruled ? '已按你的判断记为正确' : res ? '正解！' : '不正解'}
+          titleLang={overruled ? 'zh-CN' : 'ja'}
+          onNext={next}
+          nextRef={nextBtn}
+          extra={
+            !res &&
+            !empty && (
+              <button className="btn ghost" onClick={overrule} title="例如写法不同，但答案实际正确">
+                我的答案也正确
+              </button>
+            )
+          }
+        >
+          <div className="sheet-answer">
+            {item.answers.map((set, i) => (
+              <span key={i}>
+                {i > 0 && <span className="muted"> ／ </span>}
+                <J>{set.join(' … ')}</J>
+              </span>
+            ))}
+          </div>
+          {!res && !empty && (
+            <p className="sheet-note">
+              你的答案：<span lang="ja">{vals.map((v) => v?.trim() || '＿＿').join(' … ')}</span>
+            </p>
+          )}
         </Sheet>
       )}
     </div>
