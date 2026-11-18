@@ -16,6 +16,7 @@ export default function PointView({ id }: { id: string }) {
   const items = itemsOf(id)
   const now = Date.now()
   const lesson = lessonOfPoint.get(id)
+  const speed = quickOf(id).length + fillOf(id).length
 
   return (
     <div className="point-view">
@@ -38,10 +39,18 @@ export default function PointView({ id }: { id: string }) {
                   {LEVEL_HINT[m.level]}
                 </p>
               </div>
-              <a className="btn primary" href={`#/session/drill/${id}`}>
-                <Icon name="pen" size={18} />
-                专项练习
-              </a>
+              <div className="pv-actions">
+                <a className="btn primary" href={`#/session/drill/${id}`}>
+                  <Icon name="pen" size={18} />
+                  专项练习
+                </a>
+                {speed > 0 && (
+                  <a className="btn" href={`#/session/pspeed/${id}`} title="本文型的全部速测题：选择和填空交替，每题只出一次">
+                    <Icon name="eye" size={18} />
+                    快速自测（{speed}）
+                  </a>
+                )}
+              </div>
             </div>
           }
         />
@@ -50,7 +59,7 @@ export default function PointView({ id }: { id: string }) {
           <div className="card-head">
             <h2 className="card-title">
               <Icon name="exam" />
-              练习题 · {items.length} 道{quickOf(id).length + fillOf(id).length > 0 && ` · 速测 ${quickOf(id).length + fillOf(id).length} 道`}
+              练习题 · {items.length} 道{speed > 0 && ` · 速测 ${speed} 道`}
             </h2>
             <span className="muted small">{lesson?.title}</span>
           </div>

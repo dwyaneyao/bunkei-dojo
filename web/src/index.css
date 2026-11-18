@@ -1729,6 +1729,11 @@ a.stat:hover {
 .back:hover {
   color: var(--ink);
 }
+.pv-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 .pv-cta {
   display: flex;
   align-items: center;
