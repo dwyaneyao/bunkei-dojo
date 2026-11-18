@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { itemById, itemsOf, pointById, scopeOf } from '../content'
-import { buildDaily, buildDrill, buildMistakes, mistakeItems, type Step } from '../lib/plan'
+import { buildDaily, buildDrill, buildMistakes, buildPointSpeed, mistakeItems, type Step } from '../lib/plan'
 import { dayKey, getProgress, markIntro, useProgress, type Mode } from '../lib/store'
 import { QUIZ_KEY, SPEED_KEY, resume, writeSaved, type Tally } from '../lib/sessions'
 import { useFocusMode } from '../lib/focus'
@@ -18,8 +18,8 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
       ? QUIZ_KEY
       : mode === 'speed'
         ? SPEED_KEY
-        : mode === 'drill' && point
-          ? `drill:${point}`
+        : (mode === 'drill' || mode === 'pspeed') && point
+          ? `${mode}:${point}`
           : `${mode}:${scopeOf(p.settings.lesson)}`
   const [saved] = useState(() => resume(key))
   // The queue is fixed when the session starts; retries are spliced in as we go.
@@ -30,6 +30,8 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
         ? []
         : mode === 'drill' && point
           ? buildDrill(point)
+          : mode === 'pspeed' && point
+            ? buildPointSpeed(p, point)
           : mode === 'mistakes'
             ? buildMistakes(p)
             : buildDaily(p).steps),
@@ -52,7 +54,9 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
     window.scrollTo(0, 0)
   }, [i])
 
-  const exitHref = set ? '#/quiz' : mode === 'drill' && point ? `#/point/${point}` : '#/'
+  // A test (a lesson set or one point's 速测) shows each item once: no retries spliced in.
+  const once = set || mode === 'pspeed'
+  const exitHref = set ? '#/quiz' : (mode === 'drill' || mode === 'pspeed') && point ? `#/point/${point}` : '#/'
 
   if (total === 0 && set)
     return (
@@ -152,7 +156,12 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
               练习错题（{mistakeItems(p).length}）
             </a>
           )}
-          {mode === 'drill' && point && (
+          {mode === 'pspeed' && point && (
+            <a className="btn big" href={`#/session/pspeed/${point}`}>
+              再测一次
+            </a>
+          )}
+          {(mode === 'drill' || mode === 'pspeed') && point && (
             <a className="btn big" href={`#/point/${point}`}>
               返回文型详情
             </a>
@@ -165,7 +174,7 @@ export default function Session({ mode, point }: { mode: Exclude<Mode, 'exam'>; 
   const done = (r: StepResult, itemId: string) => {
     const it = itemById.get(itemId)!
     setTally((t) => ({ ok: t.ok + (r.ok ? 1 : 0), bad: t.bad + (r.ok ? 0 : 1), missed: r.ok ? t.missed : [...t.missed, it.point] }))
-    if (!r.ok && !set) {
+    if (!r.ok && !once) {
       const next = [...steps]
       const at = Math.min(next.length, i + 4)
       if (it.type !== 'produce' && !retried.has(itemId)) {

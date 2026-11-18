@@ -258,5 +258,25 @@ export function buildSpeed(p: Progress, points: string[], count: number, kind: S
   return interleave(shuffle(picked))
 }
 
+/** 速测 over one point: all its choice and fill items, those last answered wrong first, then unseen ones, then the
+ *  least recently seen; choice and fill alternate where they can. */
+export function buildPointSpeed(p: Progress, pointId: string): Step[] {
+  const last = new Map<string, { t: number; ok: boolean }>()
+  for (const a of p.log) last.set(a.item, { t: a.t, ok: a.ok })
+  const rank = (id: string) => {
+    const l = last.get(id)
+    return (l ? (l.ok ? 2e13 + l.t : 0) : 1e13) + Math.random() * 1000
+  }
+  const byRank = (kind: SpeedKind) => speedOf(pointId, kind).map((i) => i.id).sort((a, b) => rank(a) - rank(b))
+  const a = byRank('choice')
+  const b = byRank('fill')
+  const ids: string[] = []
+  while (a.length || b.length) {
+    if (b.length) ids.push(b.shift()!)
+    if (a.length) ids.push(a.shift()!)
+  }
+  return ids.map((item) => ({ kind: 'item' as const, item }))
+}
+
 export const speedPoolSize = (points: string[], kind: SpeedKind) => points.reduce((n, pt) => n + speedOf(pt, kind).length, 0)
 
